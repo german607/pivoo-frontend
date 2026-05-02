@@ -48,16 +48,18 @@ export default function MatchDetailScreen() {
     }
   };
 
-  const handleApprove = async (userId: string) => {
+  const handleApprove = async (userId: string | null) => {
+    if (!userId) return;
     try {
-      await patch(`/api/v1/matches/${id}/participants/${userId}/approve?team=TEAM_A`, {}, { baseUrl: process.env.EXPO_PUBLIC_MATCHES_API_URL });
+      await patch(`/api/v1/matches/${id}/participants/${userId}/approve`, {}, { baseUrl: process.env.EXPO_PUBLIC_MATCHES_API_URL });
       await loadMatch();
     } catch (e) {
       Alert.alert('Error', 'No se pudo aprobar la solicitud');
     }
   };
 
-  const handleReject = async (userId: string) => {
+  const handleReject = async (userId: string | null) => {
+    if (!userId) return;
     try {
       await patch(`/api/v1/matches/${id}/participants/${userId}/reject`, {}, { baseUrl: process.env.EXPO_PUBLIC_MATCHES_API_URL });
       await loadMatch();

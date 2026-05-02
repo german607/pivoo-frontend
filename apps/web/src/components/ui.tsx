@@ -14,32 +14,33 @@ export function Input({ label, error, icon, hint, className = '', ...props }: In
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-semibold text-slate-800">
           {label}
-          {props.required && <span className="text-red-500 ml-1">*</span>}
+          {props.required && <span className="text-red-600 ml-1">*</span>}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 flex items-center">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 flex items-center pointer-events-none">
             {icon}
           </div>
         )}
         <input
           className={cn(
-            'w-full px-4 py-2.5 border border-gray-300 rounded-lg transition-all',
-            'focus:border-teal-500 focus:ring-2 focus:ring-teal-100 focus:ring-opacity-50',
-            'text-gray-900 placeholder-gray-400',
-            'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
-            error ? 'border-red-500 focus:ring-red-100' : '',
+            'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl',
+            'text-slate-900 placeholder-slate-600 text-sm',
+            'transition-all duration-150',
+            'focus:outline-none focus:border-teal-500 focus:ring-3 focus:ring-teal-500/10',
+            'disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed',
+            error ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10' : '',
             icon ? 'pl-10' : '',
             className
           )}
           {...props}
         />
       </div>
-      {error && <span className="text-sm text-red-600 font-medium">{error}</span>}
-      {hint && !error && <span className="text-sm text-gray-500">{hint}</span>}
+      {error && <span className="text-xs text-red-700 font-medium">{error}</span>}
+      {hint && !error && <span className="text-xs text-slate-700">{hint}</span>}
     </div>
   );
 }
@@ -63,34 +64,39 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles =
-    'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const base =
+    'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 select-none';
 
   const variants = {
-    primary: 'bg-teal-600 text-white hover:bg-teal-700 focus:ring-teal-200 active:bg-teal-800 shadow-sm hover:shadow-md',
-    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-200 active:bg-gray-300',
-    outline: 'border border-gray-300 text-gray-900 hover:bg-gray-50 focus:ring-teal-200 active:bg-gray-100',
-    ghost: 'text-teal-600 hover:bg-teal-50 focus:ring-teal-200 active:bg-teal-100',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-200 active:bg-red-800 shadow-sm hover:shadow-md',
+    primary:
+      'bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-400 hover:to-emerald-400 focus:ring-teal-400 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 active:scale-[0.98]',
+    secondary:
+      'bg-slate-200 text-slate-900 hover:bg-slate-300 focus:ring-slate-400 active:bg-slate-400',
+    outline:
+      'border-2 border-slate-300 text-slate-800 hover:border-teal-500 hover:text-teal-700 hover:bg-teal-50 focus:ring-teal-400 active:bg-teal-50',
+    ghost:
+      'text-teal-700 hover:bg-teal-50 focus:ring-teal-400 active:bg-teal-100',
+    danger:
+      'bg-red-500 text-white hover:bg-red-600 focus:ring-red-300 shadow-sm hover:shadow-md active:bg-red-700 active:scale-[0.98]',
   };
 
   const sizes = {
     sm: 'px-3 py-1.5 text-sm gap-1.5',
-    md: 'px-4 py-2.5 text-base',
-    lg: 'px-6 py-3 text-base',
+    md: 'px-5 py-2.5 text-sm',
+    lg: 'px-7 py-3 text-base',
   };
 
-  const iconElement = icon && <span className="flex items-center">{icon}</span>;
+  const iconEl = icon && <span className="flex items-center shrink-0">{icon}</span>;
 
   return (
     <button
-      className={cn(baseStyles, variants[variant], sizes[size], className)}
+      className={cn(base, variants[variant], sizes[size], className)}
       disabled={disabled || isLoading}
       {...props}
     >
-      {iconPosition === 'left' && iconElement}
-      <span>{isLoading ? 'Loading...' : children}</span>
-      {iconPosition === 'right' && iconElement}
+      {iconPosition === 'left' && iconEl}
+      <span>{isLoading ? '···' : children}</span>
+      {iconPosition === 'right' && iconEl}
     </button>
   );
 }
@@ -98,7 +104,7 @@ export function Button({
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   padding?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'elevated';
+  variant?: 'default' | 'elevated' | 'flat';
 }
 
 export function Card({
@@ -108,29 +114,23 @@ export function Card({
   className = '',
   ...props
 }: CardProps) {
-  const paddingSizes = {
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
-  };
+  const paddings = { sm: 'p-4', md: 'p-6', lg: 'p-7' };
 
   const variants = {
-    default: 'bg-white border border-gray-200 rounded-xl shadow-sm',
-    elevated: 'bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200',
+    default: 'bg-white border border-slate-200/80 rounded-2xl shadow-card',
+    elevated: 'bg-white rounded-2xl shadow-card hover:shadow-card-hover transition-shadow duration-300',
+    flat: 'bg-slate-50 border border-slate-200/60 rounded-2xl',
   };
 
   return (
-    <div
-      className={cn(paddingSizes[padding], variants[variant], className)}
-      {...props}
-    >
+    <div className={cn(paddings[padding], variants[variant], className)} {...props}>
       {children}
     </div>
   );
 }
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'teal';
   size?: 'sm' | 'md';
 }
 
@@ -142,16 +142,17 @@ export function Badge({
   ...props
 }: BadgeProps) {
   const variants = {
-    default: 'bg-gray-100 text-gray-700',
-    success: 'bg-green-100 text-green-700',
-    warning: 'bg-amber-100 text-amber-700',
-    error: 'bg-red-100 text-red-700',
-    info: 'bg-blue-100 text-blue-700',
+    default: 'bg-slate-100 text-slate-700 ring-1 ring-slate-300',
+    success: 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-300',
+    warning: 'bg-amber-50 text-amber-800 ring-1 ring-amber-300',
+    error: 'bg-red-50 text-red-700 ring-1 ring-red-300',
+    info: 'bg-blue-50 text-blue-800 ring-1 ring-blue-300',
+    teal: 'bg-teal-50 text-teal-800 ring-1 ring-teal-300',
   };
 
   const sizes = {
-    sm: 'px-2 py-1 text-xs font-medium rounded-md',
-    md: 'px-3 py-1.5 text-sm font-medium rounded-lg',
+    sm: 'px-2.5 py-0.5 text-xs font-semibold rounded-full',
+    md: 'px-3 py-1 text-sm font-semibold rounded-full',
   };
 
   return (
@@ -169,16 +170,16 @@ interface TabsProps {
 
 export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
   return (
-    <div className="flex gap-1 border-b border-gray-200">
+    <div className="flex gap-1 p-1 bg-slate-100 rounded-xl w-fit">
       {tabs.map((tab) => (
         <button
           key={tab.value}
           onClick={() => onChange(tab.value)}
           className={cn(
-            'px-4 py-3 font-medium text-sm border-b-2 transition-all duration-200',
+            'px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-150',
             activeTab === tab.value
-              ? 'border-teal-600 text-teal-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-700 hover:text-slate-900'
           )}
         >
           {tab.label}
@@ -188,13 +189,10 @@ export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
   );
 }
 
-export function Skeleton({
-  className = '',
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+export function Skeleton({ className = '', ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('animate-pulse bg-gray-200 rounded-lg', className)}
+      className={cn('skeleton rounded-xl', className)}
       {...props}
     />
   );

@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
-import { Tournament, TournamentStatus, SportComplex, UserRole } from '@pivoo/shared';
+import { Tournament, TournamentStatus, SportComplex, Sport, UserRole } from '@pivoo/shared';
 import { Header } from '@/components/Header';
-import { Button, Skeleton } from '@/components/ui';
+import { Button, Input, Skeleton } from '@/components/ui';
 import { Link, useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import { Building2, Trophy, Plus, Users, TrendingUp, Settings } from 'lucide-react';
+import { Building2, Trophy, Plus, Users, TrendingUp, Settings, X, Trash2 } from 'lucide-react';
 
 const STATUS_BADGE: Record<TournamentStatus, { label: string; className: string }> = {
   [TournamentStatus.DRAFT]: { label: 'Borrador', className: 'bg-gray-100 text-gray-600' },
@@ -21,13 +21,29 @@ const STATUS_BADGE: Record<TournamentStatus, { label: string; className: string 
 
 export default function ComplexDashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const { get } = useApi();
+  const { get, post, delete: del } = useApi();
   const router = useRouter();
   const t = useTranslations('complexDashboard');
 
+  const CAPI = { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL };
+
   const [complex, setComplex] = useState<SportComplex | null>(null);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [sports, setSports] = useState<Sport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState('');
+
+  // Create-complex form
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createName, setCreateName] = useState('');
+  const [createAddress, setCreateAddress] = useState('');
+  const [createCity, setCreateCity] = useState('');
+
+  // Add-court form
+  const [showAddCourt, setShowAddCourt] = useState(false);
+  const [courtSportId, setCourtSportId] = useState('');
+  const [courtName, setCourtName] = useState('');
+  const [courtIndoor, setCourtIndoor] = useState(false);
 
   useEffect(() => {
     if (!authLoading) {
@@ -40,21 +56,55 @@ export default function ComplexDashboardPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [complexData, tournamentData] = await Promise.all([
-        get<SportComplex[]>(`/api/v1/complexes?adminUserId=${user?.id}`, {
-          baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL,
-        }).then((arr) => arr?.[0] ?? null),
+      const [complexData, tournamentData, sportData] = await Promise.all([
+        get<SportComplex[]>(`/api/v1/complexes?adminUserId=${user?.id}`, CAPI).then((arr) => arr?.[0] ?? null),
         get<Tournament[]>(`/api/v1/tournaments?complexAdminUserId=${user?.id}`, {
           baseUrl: process.env.NEXT_PUBLIC_TOURNAMENTS_API_URL,
         }),
+        get<Sport[]>('/api/v1/sports', { baseUrl: process.env.NEXT_PUBLIC_SPORTS_API_URL }),
       ]);
       setComplex(complexData);
       setTournaments(tournamentData || []);
+      setSports(sportData || []);
     } catch (err) {
       console.error(err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCreateComplex = async () => {
+    if (!createName.trim() || !createAddress.trim() || !createCity.trim()) return;
+    setActionLoading('create');
+    try {
+      await post('/api/v1/complexes', { name: createName.trim(), address: createAddress.trim(), city: createCity.trim() }, CAPI);
+      setShowCreateForm(false);
+      setCreateName(''); setCreateAddress(''); setCreateCity('');
+      await loadData();
+    } catch (err) { console.error(err); }
+    finally { setActionLoading(''); }
+  };
+
+  const handleAddCourt = async () => {
+    if (!complex || !courtSportId || !courtName.trim()) return;
+    setActionLoading('court');
+    try {
+      await post(`/api/v1/complexes/${complex.id}/courts`, { sportId: courtSportId, name: courtName.trim(), indoor: courtIndoor }, CAPI);
+      setShowAddCourt(false);
+      setCourtSportId(''); setCourtName(''); setCourtIndoor(false);
+      await loadData();
+    } catch (err) { console.error(err); }
+    finally { setActionLoading(''); }
+  };
+
+  const handleDeleteCourt = async (courtId: string) => {
+    if (!complex || !confirm('¿Eliminar esta pista?')) return;
+    setActionLoading('court-' + courtId);
+    try {
+      await del(`/api/v1/complexes/${complex.id}/courts/${courtId}`, CAPI);
+      await loadData();
+    } catch (err) { console.error(err); }
+    finally { setActionLoading(''); }
   };
 
   const activeTournaments = tournaments.filter((t) => t.status === TournamentStatus.IN_PROGRESS).length;
@@ -99,8 +149,9 @@ export default function ComplexDashboardPage() {
           </div>
           <div className="flex gap-3">
             {complex && (
-              <Button variant="outline" size="sm" icon={<Settings className="w-4 h-4" />}>
-                Editar perfil
+              <Button variant="outline" size="sm" icon={<Settings className="w-4 h-4" />}
+                onClick={() => setShowAddCourt(true)}>
+                Añadir pista
               </Button>
             )}
             <Button
@@ -114,15 +165,151 @@ export default function ComplexDashboardPage() {
           </div>
         </div>
 
-        {/* No complex setup */}
+        {/* No complex — create form */}
         {!complex && (
-          <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center mb-8">
-            <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">{t('setupTitle')}</h2>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">{t('setupDesc')}</p>
-            <Button variant="primary" icon={<Settings className="w-4 h-4" />}>
-              {t('setupBtn')}
-            </Button>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8">
+            {!showCreateForm ? (
+              <div className="p-12 text-center border-2 border-dashed border-gray-200 rounded-2xl">
+                <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <h2 className="text-xl font-semibold text-gray-700 mb-2">{t('setupTitle')}</h2>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto">{t('setupDesc')}</p>
+                <Button variant="primary" icon={<Settings className="w-4 h-4" />}
+                  onClick={() => setShowCreateForm(true)}>
+                  {t('setupBtn')}
+                </Button>
+              </div>
+            ) : (
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-bold text-gray-900">Crear complejo deportivo</h2>
+                  <button onClick={() => setShowCreateForm(false)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Nombre del complejo
+                    </label>
+                    <Input
+                      placeholder="Club Deportivo ejemplo"
+                      value={createName}
+                      onChange={(e) => setCreateName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Dirección
+                    </label>
+                    <Input
+                      placeholder="Calle Mayor, 1"
+                      value={createAddress}
+                      onChange={(e) => setCreateAddress(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Ciudad
+                    </label>
+                    <Input
+                      placeholder="Madrid"
+                      value={createCity}
+                      onChange={(e) => setCreateCity(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="primary" onClick={handleCreateComplex}
+                    isLoading={actionLoading === 'create'}
+                    disabled={!createName.trim() || !createAddress.trim() || !createCity.trim()}>
+                    Crear complejo
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Courts management */}
+        {complex && (
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm mb-8">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="font-bold text-gray-900">Pistas</h2>
+              {!showAddCourt && (
+                <button onClick={() => setShowAddCourt(true)}
+                  className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors flex items-center gap-1">
+                  <Plus className="w-3.5 h-3.5" /> Añadir pista
+                </button>
+              )}
+            </div>
+
+            {showAddCourt && (
+              <div className="px-6 py-4 bg-teal-50 border-b border-teal-100">
+                <div className="flex flex-wrap items-end gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Nombre
+                    </label>
+                    <Input placeholder="Pista 1" value={courtName} onChange={(e) => setCourtName(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Deporte
+                    </label>
+                    <select value={courtSportId} onChange={(e) => setCourtSportId(e.target.value)}
+                      className="border border-gray-300 rounded-xl px-3 py-2 text-sm text-gray-700 focus:border-teal-500 focus:outline-none bg-white">
+                      <option value="">— Seleccionar —</option>
+                      {sports.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2 pb-2">
+                    <input type="checkbox" id="indoor" checked={courtIndoor}
+                      onChange={(e) => setCourtIndoor(e.target.checked)}
+                      className="rounded border-gray-300 text-teal-500" />
+                    <label htmlFor="indoor" className="text-sm text-gray-700 font-medium">Interior</label>
+                  </div>
+                  <div className="flex gap-2 pb-0.5">
+                    <Button variant="primary" size="sm" onClick={handleAddCourt}
+                      isLoading={actionLoading === 'court'}
+                      disabled={!courtName.trim() || !courtSportId}>
+                      Añadir
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setShowAddCourt(false); setCourtName(''); setCourtSportId(''); setCourtIndoor(false); }}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {(complex.courts ?? []).length === 0 ? (
+              <div className="p-8 text-center text-gray-400">
+                <p className="text-sm">No hay pistas registradas. Añade la primera.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {(complex.courts ?? []).map((court) => {
+                  const sportName = sports.find((s) => s.id === court.sportId)?.name ?? court.sportId;
+                  return (
+                    <div key={court.id} className="flex items-center gap-4 px-6 py-3">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-sm">{court.name}</p>
+                        <p className="text-xs text-gray-500">{sportName} · {court.indoor ? 'Interior' : 'Exterior'}</p>
+                      </div>
+                      <button onClick={() => handleDeleteCourt(court.id)}
+                        disabled={actionLoading === 'court-' + court.id}
+                        className="p-1.5 text-gray-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-40">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

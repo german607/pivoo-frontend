@@ -246,7 +246,11 @@ export default function NewMatchScreen() {
         sportId,
         complexId,
         courtId: courtId || null,
-        scheduledAt: new Date(`${date}T${time}`).toISOString(),
+        scheduledAt: (() => {
+          const [y, mo, d] = date.split('-').map(Number);
+          const [h, mi] = time.split(':').map(Number);
+          return new Date(y, mo - 1, d, h, mi, 0).toISOString();
+        })(),
         minPlayers,
         maxPlayers,
         requiredLevel: requiredLevel || null,

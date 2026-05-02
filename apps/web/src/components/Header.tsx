@@ -20,81 +20,82 @@ export function Header() {
     router.replace(pathname, { locale: nextLocale });
   };
 
+  const navLinks = [
+    { href: '/matches', label: t('matches') },
+    { href: '/tournaments', label: t('tournaments') },
+    { href: '/rankings', label: t('rankings') },
+    ...(user?.role === UserRole.PLAYER ? [{ href: '/teams', label: t('myTeam') }] : []),
+    ...(user?.role === UserRole.COMPLEX ? [{ href: '/complex', label: t('myComplex') }] : []),
+    ...(user ? [{ href: '/profile', label: t('profile') }] : []),
+  ];
+
+  const initials = user?.email?.slice(0, 2).toUpperCase() ?? '';
+
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 backdrop-blur-sm bg-opacity-95">
+    <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-white/8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-teal-600 to-teal-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">P</span>
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/30">
+              <span className="text-white font-black text-base leading-none select-none">P</span>
             </div>
-            <span className="font-bold text-lg text-gray-900 hidden sm:inline">Pivoo</span>
+            <span className="font-bold text-xl text-white hidden sm:inline tracking-tight">
+              Pivoo
+            </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/matches" className="text-gray-600 hover:text-teal-600 font-medium transition-colors text-sm">
-              {t('matches')}
-            </Link>
-            <Link href="/tournaments" className="text-gray-600 hover:text-teal-600 font-medium transition-colors text-sm">
-              {t('tournaments')}
-            </Link>
-            <Link href="/rankings" className="text-gray-600 hover:text-teal-600 font-medium transition-colors text-sm">
-              {t('rankings')}
-            </Link>
-            {user && user.role === UserRole.PLAYER && (
-              <Link href="/teams" className="text-gray-600 hover:text-teal-600 font-medium transition-colors text-sm">
-                {t('myTeam')}
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="px-3 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/8 rounded-lg transition-all duration-150"
+              >
+                {link.label}
               </Link>
-            )}
-            {user && user.role === UserRole.COMPLEX && (
-              <Link href="/complex" className="text-gray-600 hover:text-teal-600 font-medium transition-colors text-sm">
-                {t('myComplex')}
-              </Link>
-            )}
-            {user && (
-              <Link href="/profile" className="text-gray-600 hover:text-teal-600 font-medium transition-colors text-sm">
-                {t('profile')}
-              </Link>
-            )}
+            ))}
           </nav>
 
-          {/* Auth + Language Section */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Right: lang + auth */}
+          <div className="hidden md:flex items-center gap-2">
             <button
               onClick={toggleLocale}
-              className="px-3 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition-colors"
+              className="px-2.5 py-1.5 text-xs font-bold text-slate-400 hover:text-white border border-white/15 hover:border-white/30 rounded-md transition-all duration-150"
               title={t('switchLang')}
             >
               {t('switchLang')}
             </button>
 
             {user ? (
-              <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
-                <div className="flex flex-col items-end">
-                  <p className="text-sm font-medium text-gray-900">{user.email.split('@')[0]}</p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
+              <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                    {initials}
+                  </div>
+                  <span className="text-sm font-medium text-slate-200">{user.email.split('@')[0]}</span>
                 </div>
                 <button
                   onClick={logout}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 hover:text-white hover:bg-white/8 rounded-lg transition-all duration-150"
                   title={t('logout')}
                 >
-                  <LogOut className="w-5 h-5 text-gray-600" />
+                  <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
               <>
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors duration-150"
                 >
                   {t('signIn')}
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors shadow-sm hover:shadow-md"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-400 rounded-lg transition-all duration-150 shadow-lg shadow-teal-500/25"
                 >
                   {t('signUp')}
                 </Link>
@@ -102,93 +103,56 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="md:hidden p-2 text-slate-300 hover:text-white hover:bg-white/8 rounded-lg transition-colors"
           >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6 text-gray-600" />
-            ) : (
-              <Menu className="w-6 h-6 text-gray-600" />
-            )}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-gray-50 px-4 py-4 space-y-3">
-            <Link
-              href="/matches"
-              className="block px-4 py-2 text-gray-700 hover:bg-white rounded-lg transition-colors font-medium"
-            >
-              {t('matches')}
-            </Link>
-            <Link
-              href="/tournaments"
-              className="block px-4 py-2 text-gray-700 hover:bg-white rounded-lg transition-colors font-medium"
-            >
-              {t('tournaments')}
-            </Link>
-            <Link
-              href="/rankings"
-              className="block px-4 py-2 text-gray-700 hover:bg-white rounded-lg transition-colors font-medium"
-            >
-              {t('rankings')}
-            </Link>
-            {user && user.role === UserRole.PLAYER && (
+          <div className="md:hidden border-t border-white/8 py-3 space-y-0.5">
+            {navLinks.map((link) => (
               <Link
-                href="/teams"
-                className="block px-4 py-2 text-gray-700 hover:bg-white rounded-lg transition-colors font-medium"
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/8 rounded-lg transition-colors"
               >
-                {t('myTeam')}
+                {link.label}
               </Link>
-            )}
-            {user && user.role === UserRole.COMPLEX && (
-              <Link
-                href="/complex"
-                className="block px-4 py-2 text-gray-700 hover:bg-white rounded-lg transition-colors font-medium"
-              >
-                {t('myComplex')}
-              </Link>
-            )}
-            {user && (
-              <Link
-                href="/profile"
-                className="block px-4 py-2 text-gray-700 hover:bg-white rounded-lg transition-colors font-medium"
-              >
-                {t('profile')}
-              </Link>
-            )}
-            <div className="border-t border-gray-200 pt-3 space-y-2">
+            ))}
+            <div className="border-t border-white/8 pt-3 mt-3 space-y-2">
               <button
                 onClick={toggleLocale}
-                className="w-full text-left px-4 py-2 text-teal-700 font-bold text-sm bg-teal-50 rounded-lg"
+                className="block w-full text-left px-3 py-2.5 text-sm font-bold text-slate-400 hover:text-white rounded-lg transition-colors"
               >
                 {t('switchLang')}
               </button>
               {user ? (
                 <button
-                  onClick={() => {
-                    logout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium flex items-center gap-2"
+                  onClick={() => { logout(); setMobileMenuOpen(false); }}
+                  className="flex items-center gap-2 w-full px-3 py-2.5 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-white/5 rounded-lg transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   {t('logout')}
                 </button>
               ) : (
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-1">
                   <Link
                     href="/login"
-                    className="flex-1 px-4 py-2 text-sm font-medium text-teal-600 hover:bg-teal-50 rounded-lg transition-colors text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white text-center rounded-lg transition-colors"
                   >
                     {t('signIn')}
                   </Link>
                   <Link
                     href="/register"
-                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-400 text-center rounded-lg transition-colors"
                   >
                     {t('signUp')}
                   </Link>

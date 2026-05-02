@@ -46,6 +46,7 @@ export enum MatchStatus {
 
 export enum ParticipantStatus {
   PENDING = 'PENDING',
+  INVITED = 'INVITED',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
 }
@@ -117,9 +118,14 @@ export interface Match {
 }
 
 export interface MatchParticipant {
-  userId: string;
-  status: ParticipantStatus;
+  id: string;
+  userId: string | null;
+  participantType: 'REGISTERED' | 'GUEST';
+  guestFirstName: string | null;
+  guestLastName: string | null;
+  status?: ParticipantStatus;
   team: Team | null;
+  joinedAt?: string;
 }
 
 export interface AuthTokens {

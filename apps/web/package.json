@@ -1,6 +1,7 @@
 {
   "name": "@pivoo/web",
   "version": "0.1.0",
+  "packageManager": "npm@10.2.4",
   "private": true,
   "scripts": {
     "dev": "next dev",

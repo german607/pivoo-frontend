@@ -49,7 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(body?.message || 'Login failed');
     }
     const data = await res.json();
-    const authUser: AuthUser = { id: data.userId, email, role: data.role ?? UserRole.PLAYER };
+    let payload: Record<string, string>;
+    try { payload = JSON.parse(atob(data.accessToken.split('.')[1])); }
+    catch { throw new Error('Token inválido recibido del servidor'); }
+    const authUser: AuthUser = { id: payload.sub, email: payload.email ?? email, role: UserRole.PLAYER };
     setTokens(data);
     setUser(authUser);
     localStorage.setItem('tokens', JSON.stringify(data));
@@ -67,8 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(body?.message || 'Login failed');
     }
     const data = await res.json();
-    // Decode JWT payload to get complexId and role
-    const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
+    let payload: Record<string, string>;
+    try { payload = JSON.parse(atob(data.accessToken.split('.')[1])); }
+    catch { throw new Error('Token inválido recibido del servidor'); }
     const authUser: AuthUser = {
       id: payload.sub,
       email: payload.email,
@@ -92,7 +96,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(body?.message || 'Registration failed');
     }
     const data = await res.json();
-    const authUser: AuthUser = { id: data.userId, email, role: data.role ?? role };
+    let payload: Record<string, string>;
+    try { payload = JSON.parse(atob(data.accessToken.split('.')[1])); }
+    catch { throw new Error('Token inválido recibido del servidor'); }
+    const authUser: AuthUser = { id: payload.sub, email: payload.email ?? email, role };
     setTokens(data);
     setUser(authUser);
     localStorage.setItem('tokens', JSON.stringify(data));
@@ -110,7 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(body?.message || 'Registration failed');
     }
     const data = await res.json();
-    const payload = JSON.parse(atob(data.accessToken.split('.')[1]));
+    let payload: Record<string, string>;
+    try { payload = JSON.parse(atob(data.accessToken.split('.')[1])); }
+    catch { throw new Error('Token inválido recibido del servidor'); }
     const authUser: AuthUser = {
       id: payload.sub,
       email: payload.email,
