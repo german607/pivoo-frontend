@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { AuthTokens } from '@pivoo/shared';
+import { AuthTokens, UserRole } from '@pivoo/shared';
 
 interface AuthUser {
   id: string;
   email: string;
+  role?: UserRole;
+  complexId?: string | null;
 }
 
 interface AuthContextType {
@@ -49,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(body?.message || `Error ${res.status}`);
     }
     const data = await res.json();
-    const authUser: AuthUser = { id: data.userId, email };
+    const authUser: AuthUser = { id: data.userId, email, role: data.role ?? UserRole.PLAYER, complexId: data.complexId ?? null };
     setTokens(data);
     setUser(authUser);
     await SecureStore.setItemAsync('tokens', JSON.stringify(data));
@@ -64,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (!res.ok) throw new Error('Error al registrarse');
     const data = await res.json();
-    const authUser: AuthUser = { id: data.userId, email };
+    const authUser: AuthUser = { id: data.userId, email, role: data.role ?? UserRole.PLAYER, complexId: data.complexId ?? null };
     setTokens(data);
     setUser(authUser);
     await SecureStore.setItemAsync('tokens', JSON.stringify(data));

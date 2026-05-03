@@ -30,7 +30,7 @@ export default async function LocaleLayout({ children, params: { locale } }: Pro
     <html lang={locale}>
       <body>
         <NextIntlClientProvider messages={messages}>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>{children as any}</AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

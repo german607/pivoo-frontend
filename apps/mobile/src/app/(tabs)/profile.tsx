@@ -21,9 +21,11 @@ export default function ProfileScreen() {
   const loadProfile = async () => {
     try {
       const data = await get<User>('/api/v1/users/me', { baseUrl: process.env.EXPO_PUBLIC_USERS_API_URL });
-      setProfile(data);
-      setName(data.name || '');
-      setBio(data.bio || '');
+      if (data) {
+        setProfile(data);
+        setName(data.name || '');
+        setBio(data.bio || '');
+      }
     } catch (e) {
       console.error(e);
     } finally {
