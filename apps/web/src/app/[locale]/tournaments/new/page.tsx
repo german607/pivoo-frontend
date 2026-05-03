@@ -82,7 +82,7 @@ export default function CreateTournamentPage() {
     setError('');
     setIsLoading(true);
     try {
-      const TAPI = { baseUrl: process.env.NEXT_PUBLIC_TOURNAMENTS_API_URL };
+      const TAPI = { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL };
       const payload = {
         name: form.name,
         sportId: form.sportId,

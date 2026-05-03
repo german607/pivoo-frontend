@@ -57,7 +57,7 @@ export default function TournamentDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>('info');
   const [actionLoading, setActionLoading] = useState('');
 
-  const TAPI = { baseUrl: process.env.NEXT_PUBLIC_TOURNAMENTS_API_URL };
+  const TAPI = { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL};
 
   const allUserIds = [
     ...(tournament?.registrations?.map((r) => r.userId) ?? []),
