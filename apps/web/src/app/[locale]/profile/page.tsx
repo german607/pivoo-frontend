@@ -24,11 +24,11 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({ name: '', bio: '', avatarUrl: '' });
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (authLoading) return;
+    if (!user) {
       router.push('/login');
       return;
     }
-
     loadProfile();
   }, [user, authLoading]);
 
