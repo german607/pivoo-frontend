@@ -55,7 +55,7 @@ export default function TournamentsPage() {
     setIsLoading(true);
     try {
       const [tournsResult, sptsResult] = await Promise.allSettled([
-        get<Tournament[]>('/api/v1/tournaments', { baseUrl: process.env.NEXT_PUBLIC_TOURNAMENTS_API_URL }),
+        get<Tournament[]>('/api/v1/tournaments', { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL}),
         get<Sport[]>('/api/v1/sports', { baseUrl: process.env.NEXT_PUBLIC_SPORTS_API_URL }),
       ]);
       if (tournsResult.status === 'fulfilled') setTournaments(tournsResult.value || []);

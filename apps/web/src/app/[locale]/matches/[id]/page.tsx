@@ -270,8 +270,11 @@ export default function MatchDetailPage() {
             {/* Capacity bar */}
             <div className="mt-5">
               <div className="flex justify-between text-sm text-gray-500 mb-1.5">
-                <span className="flex items-center gap-1.5"><Users className="w-4 h-4" />{approved.length} jugadores</span>
-                <span>{match.maxPlayers} plazas</span>
+                <span className="flex items-center gap-1.5">
+                  <Users className="w-4 h-4" />
+                  {isFull ? 'Completo' : `${match.maxPlayers - approved.length === 1 ? 'Falta 1 jugador' : `Faltan ${match.maxPlayers - approved.length} jugadores`}`}
+                </span>
+                <span>Partido de {match.maxPlayers}</span>
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div className={`h-full rounded-full transition-all ${isFull ? 'bg-amber-400' : 'bg-teal-500'}`}

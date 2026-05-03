@@ -102,7 +102,7 @@ export default function CreateMatchPage() {
   const courts = selectedComplex?.courts || [];
   const selectedSport = sports.find((s) => s.id === formData.sportId);
   const playerOptions = selectedSport
-    ? Array.from({ length: selectedSport.maxPlayers - selectedSport.minPlayers + 1 }, (_, i) => selectedSport.minPlayers + i).filter((n) => n % 2 === 0)
+    ? Array.from({ length: selectedSport.maxPlayers - selectedSport.minPlayers + 1 }, (_, i) => selectedSport.minPlayers + i)
     : [];
 
   if (authLoading || isLoading) {
@@ -131,10 +131,8 @@ export default function CreateMatchPage() {
                 value={formData.sportId}
                 onChange={(e) => {
                   const sport = sports.find((s) => s.id === e.target.value);
-                  const firstEven = sport
-                    ? Array.from({ length: sport.maxPlayers - sport.minPlayers + 1 }, (_, i) => sport.minPlayers + i).find((n) => n % 2 === 0) ?? sport.minPlayers
-                    : 2;
-                  setFormData({ ...formData, sportId: e.target.value, maxPlayers: firstEven, minPlayers: firstEven });
+                  const defaultPlayers = sport ? sport.maxPlayers : 2;
+                  setFormData({ ...formData, sportId: e.target.value, maxPlayers: defaultPlayers, minPlayers: defaultPlayers });
                 }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
@@ -210,23 +208,37 @@ export default function CreateMatchPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Cantidad de jugadores</label>
-              <select
-                value={formData.maxPlayers}
-                onChange={(e) => {
-                  const n = parseInt(e.target.value);
-                  setFormData({ ...formData, maxPlayers: n, minPlayers: n });
-                }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400"
-                required
-                disabled={!selectedSport}
-              >
-                {!selectedSport && <option value="">Seleccioná un deporte primero</option>}
-                {playerOptions.map((n) => (
-                  <option key={n} value={n}>{n} jugadores</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Jugadores totales</label>
+                <select
+                  value={formData.maxPlayers}
+                  onChange={(e) => {
+                    const n = parseInt(e.target.value);
+                    setFormData({ ...formData, maxPlayers: n, minPlayers: n });
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400"
+                  required
+                  disabled={!selectedSport}
+                >
+                  {!selectedSport && <option value="">Seleccioná un deporte primero</option>}
+                  {playerOptions.map((n) => (
+                    <option key={n} value={n}>{n} jugadores</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Jugadores que faltan</label>
+                <select
+                  disabled={!selectedSport}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400"
+                >
+                  {!selectedSport && <option value="">—</option>}
+                  {Array.from({ length: formData.maxPlayers - 1 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>{n === 1 ? '1 jugador' : `${n} jugadores`}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Nivel / Categoría toggle */}

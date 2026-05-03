@@ -98,6 +98,11 @@ export function MatchCard({ match, sportName }: MatchCardProps) {
                 {LEVEL_LABEL[match.requiredLevel] ?? match.requiredLevel}
               </span>
             )}
+            {match.requiredCategory && (
+              <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                {match.requiredCategory.charAt(0) + match.requiredCategory.slice(1).toLowerCase()}
+              </span>
+            )}
           </div>
 
           {match.complex && (
