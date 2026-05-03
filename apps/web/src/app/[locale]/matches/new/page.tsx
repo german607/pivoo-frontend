@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
-import { Sport, SportComplex, SkillLevel } from '@pivoo/shared';
+import { Sport, SportComplex, SkillLevel, MatchCategory, MatchGender } from '@pivoo/shared';
 import { Header } from '@/components/Header';
 import { Card, Input, Button } from '@/components/ui';
 import { useRouter } from '@/navigation';
@@ -22,6 +22,7 @@ export default function CreateMatchPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [filterType, setFilterType] = useState<'level' | 'category'>('level');
   const [formData, setFormData] = useState({
     sportId: '',
     complexId: '',
@@ -31,6 +32,8 @@ export default function CreateMatchPage() {
     maxPlayers: 4,
     minPlayers: 2,
     requiredLevel: '',
+    requiredCategory: '',
+    gender: '',
     description: '',
   });
 
@@ -72,14 +75,18 @@ export default function CreateMatchPage() {
     setError(null);
 
     try {
-      const { date, time, ...rest } = formData;
+      const { date, time, requiredLevel, requiredCategory, ...rest } = formData;
+      const [y, mo, d] = date.split('-').map(Number);
+      const [h, mi] = time.split(':').map(Number);
       await post('/api/v1/matches', {
         ...rest,
-        scheduledAt: new Date(`${date}T${time}`).toISOString(),
+        scheduledAt: new Date(y, mo - 1, d, h, mi, 0).toISOString(),
         maxPlayers: parseInt(formData.maxPlayers.toString()),
         minPlayers: parseInt(formData.minPlayers.toString()),
         courtId: formData.courtId || null,
-        requiredLevel: formData.requiredLevel || null,
+        ...(requiredLevel ? { requiredLevel } : {}),
+        ...(requiredCategory ? { requiredCategory } : {}),
+        gender: formData.gender || null,
         description: formData.description || null,
       }, { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL });
 
@@ -93,6 +100,10 @@ export default function CreateMatchPage() {
 
   const selectedComplex = complexes.find((c) => c.id === formData.complexId);
   const courts = selectedComplex?.courts || [];
+  const selectedSport = sports.find((s) => s.id === formData.sportId);
+  const playerOptions = selectedSport
+    ? Array.from({ length: selectedSport.maxPlayers - selectedSport.minPlayers + 1 }, (_, i) => selectedSport.minPlayers + i).filter((n) => n % 2 === 0)
+    : [];
 
   if (authLoading || isLoading) {
     return (
@@ -118,7 +129,13 @@ export default function CreateMatchPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('sport')}</label>
               <select
                 value={formData.sportId}
-                onChange={(e) => setFormData({ ...formData, sportId: e.target.value })}
+                onChange={(e) => {
+                  const sport = sports.find((s) => s.id === e.target.value);
+                  const firstEven = sport
+                    ? Array.from({ length: sport.maxPlayers - sport.minPlayers + 1 }, (_, i) => sport.minPlayers + i).find((n) => n % 2 === 0) ?? sport.minPlayers
+                    : 2;
+                  setFormData({ ...formData, sportId: e.target.value, maxPlayers: firstEven, minPlayers: firstEven });
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               >
@@ -193,41 +210,81 @@ export default function CreateMatchPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label={t('minPlayers')}
-                type="number"
-                min="2"
-                value={formData.minPlayers}
-                onChange={(e) =>
-                  setFormData({ ...formData, minPlayers: parseInt(e.target.value) })
-                }
-              />
-              <Input
-                label={t('maxPlayers')}
-                type="number"
-                min="2"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Cantidad de jugadores</label>
+              <select
                 value={formData.maxPlayers}
-                onChange={(e) =>
-                  setFormData({ ...formData, maxPlayers: parseInt(e.target.value) })
-                }
-              />
+                onChange={(e) => {
+                  const n = parseInt(e.target.value);
+                  setFormData({ ...formData, maxPlayers: n, minPlayers: n });
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400"
+                required
+                disabled={!selectedSport}
+              >
+                {!selectedSport && <option value="">Seleccioná un deporte primero</option>}
+                {playerOptions.map((n) => (
+                  <option key={n} value={n}>{n} jugadores</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Nivel / Categoría toggle */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Requisito de participación</label>
+              <div className="flex rounded-lg border border-gray-300 overflow-hidden mb-3">
+                <button
+                  type="button"
+                  onClick={() => { setFilterType('level'); setFormData((f) => ({ ...f, requiredCategory: '' })); }}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'level' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                >
+                  Por nivel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setFilterType('category'); setFormData((f) => ({ ...f, requiredLevel: '' })); }}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'category' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                >
+                  Por categoría
+                </button>
+              </div>
+              {filterType === 'level' ? (
+                <select
+                  value={formData.requiredLevel}
+                  onChange={(e) => setFormData({ ...formData, requiredLevel: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="">Sin requisito de nivel</option>
+                  <option value={SkillLevel.BEGINNER}>Principiante</option>
+                  <option value={SkillLevel.INTERMEDIATE}>Intermedio</option>
+                  <option value={SkillLevel.ADVANCED}>Avanzado</option>
+                  <option value={SkillLevel.PROFESSIONAL}>Profesional</option>
+                </select>
+              ) : (
+                <select
+                  value={formData.requiredCategory}
+                  onChange={(e) => setFormData({ ...formData, requiredCategory: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="">Sin requisito de categoría</option>
+                  {Object.values(MatchCategory).map((cat) => (
+                    <option key={cat} value={cat}>{cat.charAt(0) + cat.slice(1).toLowerCase()}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('requiredLevel')}
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Género</label>
               <select
-                value={formData.requiredLevel}
-                onChange={(e) => setFormData({ ...formData, requiredLevel: e.target.value })}
+                value={formData.gender}
+                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                <option value="">{t('noLevel')}</option>
-                <option value="BEGINNER">{t('beginner')}</option>
-                <option value="INTERMEDIATE">{t('intermediate')}</option>
-                <option value="ADVANCED">{t('advanced')}</option>
-                <option value="PROFESSIONAL">{t('professional')}</option>
+                <option value="">Sin restricción de género</option>
+                <option value={MatchGender.MASCULINO}>Masculino</option>
+                <option value={MatchGender.FEMENINO}>Femenino</option>
+                <option value={MatchGender.MIXTO}>Mixto</option>
               </select>
             </div>
 

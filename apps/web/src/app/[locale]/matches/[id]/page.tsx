@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
-import { Match, MatchParticipant, ParticipantStatus, Team } from '@pivoo/shared';
+import { Match, MatchParticipant, ParticipantStatus, Team, MatchCategory, MatchGender } from '@pivoo/shared';
 import { Header } from '@/components/Header';
 import { Button, Card, Input, Skeleton } from '@/components/ui';
 import { Link, useRouter } from '@/navigation';
@@ -21,6 +21,11 @@ const LEVEL_LABEL: Record<string, string> = {
   INTERMEDIATE: 'Intermedio',
   ADVANCED: 'Avanzado',
   PROFESSIONAL: 'Profesional',
+};
+const GENDER_LABEL: Record<string, string> = {
+  MASCULINO: 'Masculino',
+  FEMENINO: 'Femenino',
+  MIXTO: 'Mixto',
 };
 const TEAM_COLORS = {
   TEAM_A: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Equipo A' },
@@ -99,6 +104,12 @@ export default function MatchDetailPage() {
     act(userId + '_r', () => patch(`/api/v1/matches/${matchId}/participants/${userId}/reject`, {}, MAPI));
   const handleRemove = (participantId: string) =>
     act(participantId + '_rm', () => del(`/api/v1/matches/${matchId}/participants/${participantId}`, MAPI));
+  const handleChangeTeam = (participantId: string, team: string) =>
+    act(participantId + '_team', () => patch(
+      `/api/v1/matches/${matchId}/participants/${participantId}/team${team ? `?team=${team}` : ''}`,
+      {},
+      MAPI,
+    ));
   const handleCancel = async () => {
     if (!confirm(t('cancelConfirm'))) return;
     act('cancel', async () => { await del(`/api/v1/matches/${matchId}`, MAPI); router.push('/matches'); });
@@ -237,6 +248,17 @@ export default function MatchDetailPage() {
                       {LEVEL_LABEL[match.requiredLevel] ?? match.requiredLevel}
                     </span>
                   )}
+                  {match.requiredCategory && (
+                    <span className="flex items-center gap-1.5">
+                      <Trophy className="w-4 h-4 text-amber-500" />
+                      {match.requiredCategory.charAt(0) + match.requiredCategory.slice(1).toLowerCase()}
+                    </span>
+                  )}
+                  {match.gender && (
+                    <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                      {GENDER_LABEL[match.gender] ?? match.gender}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -353,15 +375,29 @@ export default function MatchDetailPage() {
                         )}
                       </div>
                     </div>
-                    {isAdmin && p.userId !== match.adminUserId && (
-                      <button
-                        onClick={() => handleRemove(p.id)}
-                        disabled={!!actionLoading}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title={t('removeParticipant')}
-                      >
-                        <UserMinus className="w-3.5 h-3.5" />
-                      </button>
+                    {isAdmin && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <select
+                          value={p.team ?? ''}
+                          disabled={!!actionLoading}
+                          onChange={(e) => handleChangeTeam(p.id, e.target.value)}
+                          className="text-xs border border-gray-200 rounded-lg px-1.5 py-1 text-gray-700 focus:border-teal-500 focus:outline-none disabled:opacity-50"
+                        >
+                          <option value="">Sin equipo</option>
+                          <option value="TEAM_A">Eq. A</option>
+                          <option value="TEAM_B">Eq. B</option>
+                        </select>
+                        {p.userId !== match.adminUserId && (
+                          <button
+                            onClick={() => handleRemove(p.id)}
+                            disabled={!!actionLoading}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title={t('removeParticipant')}
+                          >
+                            <UserMinus className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 );

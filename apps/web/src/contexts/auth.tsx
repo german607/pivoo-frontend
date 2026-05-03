@@ -31,9 +31,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem('tokens');
     if (stored) {
-      setTokens(JSON.parse(stored));
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) setUser(JSON.parse(storedUser));
+      try {
+        const parsedTokens = JSON.parse(stored);
+        const payload = JSON.parse(atob(parsedTokens.accessToken.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 > Date.now()) {
+          setTokens(parsedTokens);
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) setUser(JSON.parse(storedUser));
+        } else {
+          localStorage.removeItem('tokens');
+          localStorage.removeItem('user');
+        }
+      } catch {
+        localStorage.removeItem('tokens');
+        localStorage.removeItem('user');
+      }
     }
     setIsLoading(false);
   }, []);

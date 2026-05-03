@@ -36,6 +36,23 @@ export enum SkillLevel {
   PROFESSIONAL = 'PROFESSIONAL',
 }
 
+export enum MatchCategory {
+  PRIMERA = 'PRIMERA',
+  SEGUNDA = 'SEGUNDA',
+  TERCERA = 'TERCERA',
+  CUARTA = 'CUARTA',
+  QUINTA = 'QUINTA',
+  SEXTA = 'SEXTA',
+  SEPTIMA = 'SEPTIMA',
+  OCTAVA = 'OCTAVA',
+}
+
+export enum MatchGender {
+  MASCULINO = 'MASCULINO',
+  FEMENINO = 'FEMENINO',
+  MIXTO = 'MIXTO',
+}
+
 export enum MatchStatus {
   OPEN = 'OPEN',
   FULL = 'FULL',
@@ -111,6 +128,8 @@ export interface Match {
   maxPlayers: number;
   minPlayers: number;
   requiredLevel: SkillLevel | null;
+  requiredCategory: MatchCategory | null;
+  gender: MatchGender | null;
   status: MatchStatus;
   description: string | null;
   participants: MatchParticipant[];

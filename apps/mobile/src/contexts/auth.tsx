@@ -31,9 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedTokens = await SecureStore.getItemAsync('tokens');
         const storedUser = await SecureStore.getItemAsync('user');
         if (storedTokens && storedUser) {
-          setTokens(JSON.parse(storedTokens));
-          setUser(JSON.parse(storedUser));
+          const parsed = JSON.parse(storedTokens);
+          const payload = JSON.parse(atob(parsed.accessToken.split('.')[1]));
+          if (payload.exp && payload.exp * 1000 > Date.now()) {
+            setTokens(parsed);
+            setUser(JSON.parse(storedUser));
+          } else {
+            await SecureStore.deleteItemAsync('tokens');
+            await SecureStore.deleteItemAsync('user');
+          }
         }
+      } catch {
+        // ignore malformed stored data
       } finally {
         setIsLoading(false);
       }
