@@ -107,7 +107,7 @@ export default function CreateMatchPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="flex items-center justify-center h-96">
           <p className="text-gray-500">{tc('loading')}</p>
@@ -117,7 +117,7 @@ export default function CreateMatchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
 
       <main className="max-w-2xl mx-auto px-6 py-12">
@@ -134,7 +134,7 @@ export default function CreateMatchPage() {
                   const defaultPlayers = sport ? sport.maxPlayers : 2;
                   setFormData({ ...formData, sportId: e.target.value, maxPlayers: defaultPlayers, minPlayers: defaultPlayers });
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
               >
                 <option value="">{t('sportPlaceholder')}</option>
@@ -151,7 +151,7 @@ export default function CreateMatchPage() {
               <select
                 value={formData.complexId}
                 onChange={(e) => setFormData({ ...formData, complexId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
               >
                 <option value="">{t('complexPlaceholder')}</option>
@@ -169,7 +169,7 @@ export default function CreateMatchPage() {
                 <select
                   value={formData.courtId}
                   onChange={(e) => setFormData({ ...formData, courtId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   required
                 >
                   <option value="">{t('courtPlaceholder')}</option>
@@ -195,7 +195,7 @@ export default function CreateMatchPage() {
                 <select
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   required
                 >
                   <option value="">{t('timePlaceholder')}</option>
@@ -217,7 +217,7 @@ export default function CreateMatchPage() {
                     const n = parseInt(e.target.value);
                     setFormData({ ...formData, maxPlayers: n, minPlayers: n });
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400"
+                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100 disabled:text-gray-400"
                   required
                   disabled={!selectedSport}
                 >
@@ -231,7 +231,7 @@ export default function CreateMatchPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Jugadores que faltan</label>
                 <select
                   disabled={!selectedSport}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 disabled:bg-gray-100 disabled:text-gray-400"
+                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100 disabled:text-gray-400"
                 >
                   {!selectedSport && <option value="">—</option>}
                   {Array.from({ length: formData.maxPlayers - 1 }, (_, i) => i + 1).map((n) => (
@@ -248,14 +248,14 @@ export default function CreateMatchPage() {
                 <button
                   type="button"
                   onClick={() => { setFilterType('level'); setFormData((f) => ({ ...f, requiredCategory: '' })); }}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'level' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'level' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-slate-600'}`}
                 >
                   Por nivel
                 </button>
                 <button
                   type="button"
                   onClick={() => { setFilterType('category'); setFormData((f) => ({ ...f, requiredLevel: '' })); }}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'category' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'category' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-slate-600'}`}
                 >
                   Por categoría
                 </button>
@@ -264,7 +264,7 @@ export default function CreateMatchPage() {
                 <select
                   value={formData.requiredLevel}
                   onChange={(e) => setFormData({ ...formData, requiredLevel: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="">Sin requisito de nivel</option>
                   <option value={SkillLevel.BEGINNER}>Principiante</option>
@@ -276,7 +276,7 @@ export default function CreateMatchPage() {
                 <select
                   value={formData.requiredCategory}
                   onChange={(e) => setFormData({ ...formData, requiredCategory: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="">Sin requisito de categoría</option>
                   {Object.values(MatchCategory).map((cat) => (
@@ -291,7 +291,7 @@ export default function CreateMatchPage() {
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
               >
                 <option value="">Sin restricción de género</option>
                 <option value={MatchGender.MASCULINO}>Masculino</option>

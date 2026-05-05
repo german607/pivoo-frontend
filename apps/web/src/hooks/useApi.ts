@@ -2,20 +2,35 @@ import { useAuth } from '@/contexts/auth';
 import { useRouter } from '@/navigation';
 
 export function useApi() {
-  const { tokens, logout } = useAuth();
+  const { tokens, logout, refreshTokens } = useAuth();
   const router = useRouter();
 
-  const request = async <T,>(path: string, options?: RequestInit & { baseUrl?: string }): Promise<T> => {
+  const doFetch = (path: string, accessToken: string | undefined, options?: RequestInit & { baseUrl?: string }) => {
     const base = options?.baseUrl ?? process.env.NEXT_PUBLIC_API_URL;
     const { baseUrl: _, ...fetchOptions } = options ?? {};
-    const res = await fetch(`${base}${path}`, {
+    return fetch(`${base}${path}`, {
       ...fetchOptions,
       headers: {
         'Content-Type': 'application/json',
-        ...(tokens ? { Authorization: `Bearer ${tokens.accessToken}` } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...fetchOptions?.headers,
       },
     });
+  };
+
+  const request = async <T,>(path: string, options?: RequestInit & { baseUrl?: string }): Promise<T> => {
+    let res = await doFetch(path, tokens?.accessToken, options);
+
+    if (res.status === 401) {
+      try {
+        const newTokens = await refreshTokens();
+        res = await doFetch(path, newTokens.accessToken, options);
+      } catch {
+        logout();
+        router.push('/login');
+        throw new Error('Session expired');
+      }
+    }
 
     if (res.status === 401) {
       logout();

@@ -63,7 +63,7 @@ export default function ProfilePage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="flex items-center justify-center h-96">
           <p className="text-gray-500">{tc('loading')}</p>
@@ -74,7 +74,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="flex items-center justify-center h-96">
           <p className="text-gray-500">{t('notFound')}</p>
@@ -84,7 +84,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
 
       <main className="max-w-2xl mx-auto px-6 py-12">

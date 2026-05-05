@@ -108,7 +108,7 @@ export default function CreateTournamentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-12">
         <div className="flex items-center gap-3 mb-8">

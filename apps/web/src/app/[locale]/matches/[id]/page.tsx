@@ -146,7 +146,7 @@ export default function MatchDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="max-w-3xl mx-auto px-4 py-12 space-y-4">
           <Skeleton className="h-48" />
@@ -159,7 +159,7 @@ export default function MatchDetailPage() {
 
   if (!match) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="max-w-3xl mx-auto px-4 py-24 text-center">
           <p className="text-gray-500 font-medium mb-4">{t('notFound')}</p>
@@ -199,7 +199,7 @@ export default function MatchDetailPage() {
     match.status === 'IN_PROGRESS' ? 'En curso' : match.status === 'COMPLETED' ? 'Finalizado' : 'Cancelado';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
