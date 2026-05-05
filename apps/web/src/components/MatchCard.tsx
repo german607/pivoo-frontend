@@ -96,9 +96,9 @@ export function MatchCard({ match, sportName }: MatchCardProps) {
 
           <div className="absolute left-16 bottom-4">
             <p className="text-white font-black text-lg leading-none drop-shadow">{sport.label}</p>
-            {match.complex && (
+            {(match.complex || match.complexName) && (
               <p className="text-white/70 text-xs font-medium mt-0.5 flex items-center gap-1">
-                <MapPin className="w-3 h-3" />{match.complex.name}
+                <MapPin className="w-3 h-3" />{match.complex?.name ?? match.complexName}
               </p>
             )}
           </div>
@@ -126,10 +126,10 @@ export function MatchCard({ match, sportName }: MatchCardProps) {
             </div>
           </div>
 
-          {match.complex && (
+          {(match.complex || match.complexName) && (
             <p className="flex items-center gap-1 text-xs text-slate-500 mb-3">
               <MapPin className="w-3 h-3 shrink-0" />
-              {match.complex.city}
+              {match.complex ? match.complex.city : match.complexName}
             </p>
           )}
 
