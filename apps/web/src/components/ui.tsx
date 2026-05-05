@@ -14,24 +14,24 @@ export function Input({ label, error, icon, hint, className = '', ...props }: In
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-sm font-semibold text-slate-800">
+        <label className="text-sm font-semibold text-slate-700">
           {label}
           {props.required && <span className="text-red-600 ml-1">*</span>}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 flex items-center pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 flex items-center pointer-events-none">
             {icon}
           </div>
         )}
         <input
           className={cn(
             'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl',
-            'text-slate-900 placeholder-slate-600 text-sm',
+            'text-slate-900 placeholder-slate-400 text-sm',
             'transition-all duration-150',
-            'focus:outline-none focus:border-teal-500 focus:ring-3 focus:ring-teal-500/10',
-            'disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed',
+            'focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10',
+            'disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed',
             error ? 'border-red-400 focus:border-red-500 focus:ring-red-500/10' : '',
             icon ? 'pl-10' : '',
             className
@@ -39,8 +39,8 @@ export function Input({ label, error, icon, hint, className = '', ...props }: In
           {...props}
         />
       </div>
-      {error && <span className="text-xs text-red-700 font-medium">{error}</span>}
-      {hint && !error && <span className="text-xs text-slate-700">{hint}</span>}
+      {error && <span className="text-xs text-red-600 font-medium">{error}</span>}
+      {hint && !error && <span className="text-xs text-slate-500">{hint}</span>}
     </div>
   );
 }
@@ -71,9 +71,9 @@ export function Button({
     primary:
       'bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-400 hover:to-emerald-400 focus:ring-teal-400 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 active:scale-[0.98]',
     secondary:
-      'bg-slate-200 text-slate-900 hover:bg-slate-300 focus:ring-slate-400 active:bg-slate-400',
+      'bg-slate-100 text-slate-800 hover:bg-slate-200 focus:ring-slate-400 active:bg-slate-300',
     outline:
-      'border-2 border-slate-300 text-slate-800 hover:border-teal-500 hover:text-teal-700 hover:bg-teal-50 focus:ring-teal-400 active:bg-teal-50',
+      'border-2 border-slate-300 text-slate-700 hover:border-teal-500 hover:text-teal-700 hover:bg-teal-50 focus:ring-teal-400 active:bg-teal-50',
     ghost:
       'text-teal-700 hover:bg-teal-50 focus:ring-teal-400 active:bg-teal-100',
     danger:
@@ -117,8 +117,8 @@ export function Card({
   const paddings = { sm: 'p-4', md: 'p-6', lg: 'p-7' };
 
   const variants = {
-    default: 'bg-white border border-slate-200/80 rounded-2xl shadow-card',
-    elevated: 'bg-white rounded-2xl shadow-card hover:shadow-card-hover transition-shadow duration-300',
+    default: 'bg-white border border-slate-200/80 rounded-2xl shadow-sm',
+    elevated: 'bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300',
     flat: 'bg-slate-50 border border-slate-200/60 rounded-2xl',
   };
 
@@ -179,7 +179,7 @@ export function Tabs({ tabs, activeTab, onChange }: TabsProps) {
             'px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-150',
             activeTab === tab.value
               ? 'bg-white text-slate-900 shadow-sm'
-              : 'text-slate-700 hover:text-slate-900'
+              : 'text-slate-600 hover:text-slate-900'
           )}
         >
           {tab.label}

@@ -26,7 +26,6 @@ export function Header() {
     { href: '/rankings', label: t('rankings') },
     ...(user?.role === UserRole.PLAYER ? [{ href: '/teams', label: t('myTeam') }] : []),
     ...(user?.role === UserRole.COMPLEX ? [{ href: '/complex', label: t('myComplex') }] : []),
-    ...(user ? [{ href: '/profile', label: t('profile') }] : []),
   ];
 
   const initials = user?.email?.slice(0, 2).toUpperCase() ?? '';
@@ -71,12 +70,15 @@ export function Header() {
 
             {user ? (
               <div className="flex items-center gap-2 pl-2 border-l border-white/10">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg">
+                <Link
+                  href="/profile"
+                  className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150"
+                >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
                     {initials}
                   </div>
-                  <span className="text-sm font-medium text-slate-200">{user.email.split('@')[0]}</span>
-                </div>
+                  <span className="text-xs font-medium text-slate-400 leading-none">{user.email.split('@')[0]}</span>
+                </Link>
                 <button
                   onClick={logout}
                   className="p-2 text-slate-400 hover:text-white hover:bg-white/8 rounded-lg transition-all duration-150"

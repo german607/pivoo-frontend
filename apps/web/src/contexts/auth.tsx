@@ -16,9 +16,11 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginComplex: (email: string, password: string) => Promise<void>;
+  loginWithTokens: (accessToken: string, refreshToken: string) => void;
   register: (email: string, password: string, role: UserRole) => Promise<void>;
   registerComplex: (email: string, password: string, complexId: string) => Promise<void>;
   logout: () => void;
+  refreshTokens: () => Promise<AuthTokens>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,9 +33,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem('tokens');
     if (stored) {
-      setTokens(JSON.parse(stored));
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) setUser(JSON.parse(storedUser));
+      try {
+        const parsedTokens = JSON.parse(stored);
+        const payload = JSON.parse(atob(parsedTokens.accessToken.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 > Date.now()) {
+          setTokens(parsedTokens);
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) setUser(JSON.parse(storedUser));
+        } else {
+          localStorage.removeItem('tokens');
+          localStorage.removeItem('user');
+        }
+      } catch {
+        localStorage.removeItem('tokens');
+        localStorage.removeItem('user');
+      }
     }
     setIsLoading(false);
   }, []);
@@ -132,6 +146,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('user', JSON.stringify(authUser));
   };
 
+  const loginWithTokens = (accessToken: string, refreshToken: string) => {
+    const newTokens: AuthTokens = { accessToken, refreshToken };
+    let payload: Record<string, string>;
+    try { payload = JSON.parse(atob(accessToken.split('.')[1])); }
+    catch { return; }
+    const authUser: AuthUser = {
+      id: payload.sub,
+      email: payload.email ?? '',
+      role: (payload.role as UserRole) ?? UserRole.PLAYER,
+      ...(payload.complexId ? { complexId: payload.complexId } : {}),
+    };
+    setTokens(newTokens);
+    setUser(authUser);
+    localStorage.setItem('tokens', JSON.stringify(newTokens));
+    localStorage.setItem('user', JSON.stringify(authUser));
+  };
+
   const logout = () => {
     setTokens(null);
     setUser(null);
@@ -139,8 +170,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
   };
 
+  const refreshTokens = async (): Promise<AuthTokens> => {
+    const stored = localStorage.getItem('tokens');
+    const currentTokens: AuthTokens | null = stored ? JSON.parse(stored) : null;
+    if (!currentTokens?.refreshToken) throw new Error('No refresh token');
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: currentTokens.refreshToken }),
+    });
+    if (!res.ok) throw new Error('Refresh failed');
+
+    const newTokens: AuthTokens = await res.json();
+    setTokens(newTokens);
+    localStorage.setItem('tokens', JSON.stringify(newTokens));
+    return newTokens;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, tokens, isLoading, login, loginComplex, register, registerComplex, logout }}>
+    <AuthContext.Provider value={{ user, tokens, isLoading, login, loginComplex, loginWithTokens, register, registerComplex, logout, refreshTokens }}>
       {children}
     </AuthContext.Provider>
   );
