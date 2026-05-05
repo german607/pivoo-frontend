@@ -121,8 +121,9 @@ export interface Court {
 export interface Match {
   id: string;
   sportId: string;
-  complexId: string;
-  courtId: string;
+  complexId: string | null;
+  complexName: string | null;
+  courtId: string | null;
   adminUserId: string;
   scheduledAt: string;
   maxPlayers: number;

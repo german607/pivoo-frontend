@@ -22,10 +22,12 @@ export default function CreateMatchPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [complexMode, setComplexMode] = useState<'registered' | 'custom'>('registered');
   const [filterType, setFilterType] = useState<'level' | 'category'>('level');
   const [formData, setFormData] = useState({
     sportId: '',
     complexId: '',
+    complexName: '',
     courtId: '',
     date: '',
     time: '',
@@ -75,7 +77,7 @@ export default function CreateMatchPage() {
     setError(null);
 
     try {
-      const { date, time, requiredLevel, requiredCategory, ...rest } = formData;
+      const { date, time, requiredLevel, requiredCategory, complexId, complexName, ...rest } = formData;
       const [y, mo, d] = date.split('-').map(Number);
       const [h, mi] = time.split(':').map(Number);
       await post('/api/v1/matches', {
@@ -83,6 +85,8 @@ export default function CreateMatchPage() {
         scheduledAt: new Date(y, mo - 1, d, h, mi, 0).toISOString(),
         maxPlayers: parseInt(formData.maxPlayers.toString()),
         minPlayers: parseInt(formData.minPlayers.toString()),
+        ...(complexMode === 'registered' && complexId ? { complexId } : {}),
+        ...(complexMode === 'custom' && complexName ? { complexName } : {}),
         courtId: formData.courtId || null,
         ...(requiredLevel ? { requiredLevel } : {}),
         ...(requiredCategory ? { requiredCategory } : {}),
@@ -148,19 +152,44 @@ export default function CreateMatchPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('complex')}</label>
-              <select
-                value={formData.complexId}
-                onChange={(e) => setFormData({ ...formData, complexId: e.target.value })}
-                className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                required
-              >
-                <option value="">{t('complexPlaceholder')}</option>
-                {complexes.map((complex) => (
-                  <option key={complex.id} value={complex.id}>
-                    {complex.name} ({complex.city})
-                  </option>
-                ))}
-              </select>
+              <div className="flex rounded-lg border border-gray-300 overflow-hidden mb-2">
+                <button
+                  type="button"
+                  onClick={() => { setComplexMode('registered'); setFormData((f) => ({ ...f, complexName: '' })); }}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${complexMode === 'registered' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                >
+                  Complejo registrado
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setComplexMode('custom'); setFormData((f) => ({ ...f, complexId: '', courtId: '' })); }}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${complexMode === 'custom' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                >
+                  Otro
+                </button>
+              </div>
+              {complexMode === 'registered' ? (
+                <select
+                  value={formData.complexId}
+                  onChange={(e) => setFormData({ ...formData, complexId: e.target.value })}
+                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                  <option value="">{t('complexPlaceholder')}</option>
+                  {complexes.map((complex) => (
+                    <option key={complex.id} value={complex.id}>
+                      {complex.name} ({complex.city})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={formData.complexName}
+                  onChange={(e) => setFormData({ ...formData, complexName: e.target.value })}
+                  placeholder="Ej: Club Atlético Palermo"
+                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              )}
             </div>
 
             {courts.length > 0 && (

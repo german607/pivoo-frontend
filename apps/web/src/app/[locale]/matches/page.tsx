@@ -79,7 +79,7 @@ export default function MatchesPage() {
       const data = await get<Match[]>(`/api/v1/matches${query}`, { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL });
       const complexMap = new Map(complexes.map((c) => [c.id, c]));
       setMatches((data || []).map((m) => {
-        const c = complexMap.get(m.complexId);
+        const c = m.complexId ? complexMap.get(m.complexId) : undefined;
         return c ? { ...m, complex: { name: c.name, city: c.city } } : m;
       }));
     } catch { /* ignore */ }
