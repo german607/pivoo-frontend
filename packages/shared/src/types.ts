@@ -135,6 +135,15 @@ export interface Match {
   description: string | null;
   participants: MatchParticipant[];
   complex?: { name: string; city: string };
+  result?: MatchResult | null;
+}
+
+export interface MatchResult {
+  id: string;
+  matchId: string;
+  sets: { setNumber: number; teamAScore: number; teamBScore: number }[];
+  winnerTeam: Team;
+  recordedAt: string;
 }
 
 export interface MatchParticipant {

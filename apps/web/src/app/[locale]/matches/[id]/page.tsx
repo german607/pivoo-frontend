@@ -226,9 +226,11 @@ export default function MatchDetailPage() {
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">
                   {sport?.name ?? match.sportId}
-                  {match.complex && <span className="text-gray-500 font-normal text-lg"> · {match.complex.name}</span>}
+                  {(match.complex?.name || match.complexName) && (
+                    <span className="text-gray-500 font-normal text-lg"> · {match.complex?.name ?? match.complexName}</span>
+                  )}
                 </h1>
-                {match.complex && (
+                {match.complex?.city && (
                   <p className="flex items-center gap-1 text-sm text-gray-500 mb-3">
                     <MapPin className="w-3.5 h-3.5" /> {match.complex.city}
                   </p>
@@ -531,7 +533,8 @@ export default function MatchDetailPage() {
             {/* Record result */}
             {(match.status === 'IN_PROGRESS' || match.status === 'FULL') && (
               <Card padding="lg">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Registrar resultado</h2>
+                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Registrar resultado</h2>
+                <p className="text-xs text-gray-400 mb-4">Los sets son opcionales. Solo el equipo ganador es obligatorio.</p>
                 <div className="space-y-3">
                   {resultSets.map((set, i) => (
                     <div key={set.setNumber} className="flex items-center gap-2">

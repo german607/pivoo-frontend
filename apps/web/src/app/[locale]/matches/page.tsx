@@ -47,7 +47,7 @@ export default function MatchesPage() {
   const [dateExpanded, setDateExpanded] = useState(false);
 
   useEffect(() => {
-    if (!authLoading) { loadSports(); loadComplexes(); }
+    if (!authLoading) loadSports();
   }, [authLoading]);
 
   useEffect(() => {
@@ -61,13 +61,6 @@ export default function MatchesPage() {
     } catch { /* ignore */ }
   };
 
-  const loadComplexes = async () => {
-    try {
-      const data = await get<SportComplex[]>('/api/v1/complexes', { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL });
-      setComplexes(data || []);
-    } catch { /* ignore */ }
-  };
-
   const loadMatches = async () => {
     setIsLoading(true);
     try {
@@ -76,8 +69,13 @@ export default function MatchesPage() {
       if (selectedComplexId) params.set('complexId', selectedComplexId);
       const query = params.toString() ? `?${params}` : '';
 
-      const data = await get<Match[]>(`/api/v1/matches${query}`, { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL });
-      const complexMap = new Map(complexes.map((c) => [c.id, c]));
+      const [data, complexData] = await Promise.all([
+        get<Match[]>(`/api/v1/matches${query}`, { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL }),
+        get<SportComplex[]>('/api/v1/complexes', { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL }),
+      ]);
+      const freshComplexes = complexData || [];
+      setComplexes(freshComplexes);
+      const complexMap = new Map(freshComplexes.map((c) => [c.id, c]));
       setMatches((data || []).map((m) => {
         const c = m.complexId ? complexMap.get(m.complexId) : undefined;
         return c ? { ...m, complex: { name: c.name, city: c.city } } : m;
