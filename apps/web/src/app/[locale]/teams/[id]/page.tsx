@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
 import { Header } from '@/components/Header';
-import { Card, Button, Input } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { Users, Trophy, TrendingUp, UserMinus, Crown, Send, Trash2 } from 'lucide-react';
@@ -125,7 +125,7 @@ export default function TeamDetailPage() {
       <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">{tc('loading')}</p>
+          <p className="text-slate-400">{tc('loading')}</p>
         </div>
       </div>
     );
@@ -136,7 +136,7 @@ export default function TeamDetailPage() {
       <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">{t('notFound')}</p>
+          <p className="text-slate-400">{t('notFound')}</p>
         </div>
       </div>
     );
@@ -148,8 +148,9 @@ export default function TeamDetailPage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
         {/* Team header card */}
-        <Card>
-          <div className="flex items-start justify-between">
+        <div className="bg-slate-800 rounded-2xl border border-slate-700/60 shadow-[0_2px_12px_rgba(0,0,0,0.3)] overflow-hidden">
+          <div className="h-1 w-full" style={{ background: team.color }} />
+          <div className="p-6 flex items-start justify-between">
             <div className="flex items-center gap-4">
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow"
@@ -160,10 +161,10 @@ export default function TeamDetailPage() {
               <div>
                 {isEditing ? (
                   <div className="flex items-center gap-2">
-                    <Input
+                    <input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="text-xl font-bold"
+                      className="text-xl font-bold bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                     <Button size="sm" variant="primary" onClick={saveName} isLoading={isSaving}>
                       {t('save')}
@@ -174,14 +175,14 @@ export default function TeamDetailPage() {
                   </div>
                 ) : (
                   <h1
-                    className={`text-3xl font-bold text-gray-900 ${isAdmin ? 'cursor-pointer hover:text-teal-700' : ''}`}
+                    className={`text-3xl font-bold text-white ${isAdmin ? 'cursor-pointer hover:text-teal-400' : ''} transition-colors`}
                     onClick={() => isAdmin && setIsEditing(true)}
                     title={isAdmin ? t('editName') : undefined}
                   >
                     {team.name}
                   </h1>
                 )}
-                <p className="text-gray-500 text-sm mt-1">
+                <p className="text-slate-400 text-sm mt-1">
                   {team.members.length} {t('members').toLowerCase()}
                   {team.sportId && ` · ${team.sportId}`}
                 </p>
@@ -199,39 +200,39 @@ export default function TeamDetailPage() {
               </Button>
             )}
           </div>
-        </Card>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left: Members */}
           <div className="space-y-6">
-            <Card>
-              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-teal-600" />
+            <div className="bg-slate-800 rounded-2xl border border-slate-700/60 p-6">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-teal-400" />
                 {t('members')}
               </h2>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {team.members.map((member) => (
                   <div
                     key={member.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-xl bg-slate-700/40 hover:bg-slate-700/70 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
                         <span className="text-white text-sm font-bold">
                           {member.userId.slice(0, 2).toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-white">
                           {member.userId === user?.id ? (
-                            <span className="text-teal-700">{t('you')}</span>
+                            <span className="text-teal-400">{t('you')}</span>
                           ) : (
                             member.userId
                           )}
                         </p>
                         {member.role === 'ADMIN' && (
-                          <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-medium">
+                          <span className="inline-flex items-center gap-1 text-xs text-amber-400 font-medium">
                             <Crown className="w-3 h-3" />
                             {t('admin')}
                           </span>
@@ -242,7 +243,7 @@ export default function TeamDetailPage() {
                     {isAdmin && member.userId !== user?.id && (
                       <button
                         onClick={() => removeMember(member.userId)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                         title={t('removeMember')}
                       >
                         <UserMinus className="w-4 h-4" />
@@ -254,14 +255,15 @@ export default function TeamDetailPage() {
 
               {/* Invite section — admin only */}
               {isAdmin && (
-                <div className="mt-5 pt-5 border-t border-gray-100">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">{t('inviteMember')}</p>
+                <div className="mt-5 pt-5 border-t border-slate-700">
+                  <p className="text-sm font-semibold text-slate-300 mb-2">{t('inviteMember')}</p>
                   <div className="flex gap-2">
-                    <Input
+                    <input
                       placeholder={t('inviteUserId')}
                       value={inviteUserId}
                       onChange={(e) => setInviteUserId(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && sendInvite()}
+                      className="flex-1 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                     <Button
                       variant="primary"
@@ -275,10 +277,10 @@ export default function TeamDetailPage() {
                   </div>
                   {team.invitations.length > 0 && (
                     <div className="mt-3">
-                      <p className="text-xs text-gray-500 mb-2">{t('pendingInvitations')}</p>
+                      <p className="text-xs text-slate-500 mb-2">{t('pendingInvitations')}</p>
                       <div className="space-y-1">
                         {team.invitations.map((inv) => (
-                          <p key={inv.id} className="text-xs text-gray-600 bg-amber-50 rounded px-2 py-1">
+                          <p key={inv.id} className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1">
                             {inv.invitedUserId}
                           </p>
                         ))}
@@ -287,22 +289,22 @@ export default function TeamDetailPage() {
                   )}
                 </div>
               )}
-            </Card>
+            </div>
           </div>
 
           {/* Right: Stats */}
           <div>
-            <Card>
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-amber-500" />
+            <div className="bg-slate-800 rounded-2xl border border-slate-700/60 p-6">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-400" />
                 {t('statsTitle')}
               </h2>
 
               {!stats || stats.matchesPlayed === 0 ? (
                 <div className="text-center py-10">
-                  <TrendingUp className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                  <p className="text-gray-600 font-medium mb-1">{t('noStats')}</p>
-                  <p className="text-sm text-gray-400">{t('noStatsDesc')}</p>
+                  <TrendingUp className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-300 font-medium mb-1">{t('noStats')}</p>
+                  <p className="text-sm text-slate-500">{t('noStatsDesc')}</p>
                 </div>
               ) : (
                 <>
@@ -310,7 +312,7 @@ export default function TeamDetailPage() {
                   <div className="flex justify-center mb-6">
                     <div className="relative w-28 h-28">
                       <svg viewBox="0 0 36 36" className="w-28 h-28 -rotate-90">
-                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#334155" strokeWidth="3" />
                         <circle
                           cx="18" cy="18" r="15.9" fill="none"
                           stroke="#14B8A6" strokeWidth="3"
@@ -319,35 +321,35 @@ export default function TeamDetailPage() {
                         />
                       </svg>
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-2xl font-bold text-gray-900">{stats.winRate}%</span>
-                        <span className="text-xs text-gray-500">{t('statsWinRate')}</span>
+                        <span className="text-2xl font-bold text-white">{stats.winRate}%</span>
+                        <span className="text-xs text-slate-400">{t('statsWinRate')}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Stats grid */}
-                  <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="grid grid-cols-3 gap-3 text-center">
                     {[
-                      { label: t('statsPlayed'), value: stats.matchesPlayed, color: 'text-gray-900' },
-                      { label: t('statsWon'), value: stats.matchesWon, color: 'text-teal-600' },
-                      { label: t('statsLost'), value: stats.matchesLost, color: 'text-red-500' },
+                      { label: t('statsPlayed'), value: stats.matchesPlayed, color: 'text-white' },
+                      { label: t('statsWon'), value: stats.matchesWon, color: 'text-teal-400' },
+                      { label: t('statsLost'), value: stats.matchesLost, color: 'text-red-400' },
                     ].map(({ label, value, color }) => (
-                      <div key={label} className="bg-gray-50 rounded-xl p-3">
+                      <div key={label} className="bg-slate-700/40 rounded-xl p-3">
                         <p className={`text-2xl font-bold ${color}`}>{value}</p>
-                        <p className="text-xs text-gray-500 mt-1">{label}</p>
+                        <p className="text-xs text-slate-500 mt-1">{label}</p>
                       </div>
                     ))}
                   </div>
 
                   {/* Recent matches */}
                   {stats.recentMatches.length > 0 && (
-                    <div className="mt-6 pt-5 border-t border-gray-100">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">{t('recentMatches')}</p>
+                    <div className="mt-6 pt-5 border-t border-slate-700">
+                      <p className="text-sm font-semibold text-slate-300 mb-3">{t('recentMatches')}</p>
                       <div className="space-y-2">
                         {stats.recentMatches.map((m) => (
-                          <div key={m.id} className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                            <span className="font-medium">{m.sportId}</span>
-                            <span className="text-gray-400 text-xs">
+                          <div key={m.id} className="flex items-center justify-between text-sm bg-slate-700/40 rounded-lg px-3 py-2">
+                            <span className="font-medium text-slate-300">{m.sportId}</span>
+                            <span className="text-slate-500 text-xs">
                               {new Date(m.scheduledAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -357,7 +359,7 @@ export default function TeamDetailPage() {
                   )}
                 </>
               )}
-            </Card>
+            </div>
           </div>
         </div>
       </main>

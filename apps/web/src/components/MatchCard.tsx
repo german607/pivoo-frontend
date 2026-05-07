@@ -6,33 +6,11 @@ import { Users, MapPin, Clock } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { cn } from '@/utils/cn';
 import { ReactNode } from 'react';
-
-const PadelPaddle = () => (
-  <svg width="52" height="60" viewBox="0 0 52 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-lg">
-    {/* Head */}
-    <rect x="4" y="2" width="44" height="40" rx="20" fill="white" fillOpacity="0.92"/>
-    {/* Holes grid */}
-    <circle cx="16" cy="14" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="26" cy="14" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="36" cy="14" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="16" cy="24" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="26" cy="24" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="36" cy="24" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="21" cy="34" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="31" cy="34" r="3" fill="rgba(0,100,120,0.35)"/>
-    {/* Neck */}
-    <rect x="20" y="40" width="12" height="6" fill="white" fillOpacity="0.85"/>
-    {/* Handle */}
-    <rect x="18" y="46" width="16" height="12" rx="4" fill="white" fillOpacity="0.85"/>
-    {/* Grip lines */}
-    <rect x="20" y="49" width="12" height="2" rx="1" fill="rgba(0,100,120,0.3)"/>
-    <rect x="20" y="53" width="12" height="2" rx="1" fill="rgba(0,100,120,0.3)"/>
-  </svg>
-);
+import { PadelPaddle } from '@/components/SportIcon';
 
 const SPORT_CONFIG: Record<string, { icon: ReactNode; gradient: string; label: string }> = {
   TENNIS: { icon: <span className="text-5xl leading-none select-none">🎾</span>, gradient: 'from-yellow-400 via-lime-400 to-green-500', label: 'Tenis' },
-  PADEL:  { icon: <PadelPaddle />, gradient: 'from-teal-400 via-cyan-500 to-blue-500', label: 'Pádel' },
+  PADEL:  { icon: <PadelPaddle className="w-12 h-[55px]" />, gradient: 'from-teal-400 via-cyan-500 to-blue-500', label: 'Pádel' },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; pill: string }> = {

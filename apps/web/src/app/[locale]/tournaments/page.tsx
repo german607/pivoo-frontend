@@ -8,57 +8,42 @@ import { Header } from '@/components/Header';
 import { Input, Button, Skeleton } from '@/components/ui';
 import { Plus, Search, Trophy, Calendar, Users, ArrowRight, Frown } from 'lucide-react';
 import { Link, useRouter } from '@/navigation';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/utils/cn';
 import { ReactNode } from 'react';
+import { PadelPaddle } from '@/components/SportIcon';
 
-const PadelPaddle = () => (
-  <svg width="44" height="50" viewBox="0 0 52 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-lg">
-    <rect x="4" y="2" width="44" height="40" rx="20" fill="white" fillOpacity="0.92"/>
-    <circle cx="16" cy="14" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="26" cy="14" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="36" cy="14" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="16" cy="24" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="26" cy="24" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="36" cy="24" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="21" cy="34" r="3" fill="rgba(0,100,120,0.35)"/>
-    <circle cx="31" cy="34" r="3" fill="rgba(0,100,120,0.35)"/>
-    <rect x="20" y="40" width="12" height="6" fill="white" fillOpacity="0.85"/>
-    <rect x="18" y="46" width="16" height="12" rx="4" fill="white" fillOpacity="0.85"/>
-    <rect x="20" y="49" width="12" height="2" rx="1" fill="rgba(0,100,120,0.3)"/>
-    <rect x="20" y="53" width="12" height="2" rx="1" fill="rgba(0,100,120,0.3)"/>
-  </svg>
-);
-
-const STATUS_CONFIG: Record<TournamentStatus, { label: string; dot: string; pill: string }> = {
-  [TournamentStatus.DRAFT]:               { label: 'Borrador',            dot: 'bg-slate-400',   pill: 'bg-slate-400/20 text-slate-300 border border-slate-400/30' },
-  [TournamentStatus.REGISTRATION_OPEN]:   { label: 'Inscripción abierta', dot: 'bg-emerald-400', pill: 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' },
-  [TournamentStatus.REGISTRATION_CLOSED]: { label: 'Inscr. cerrada',      dot: 'bg-amber-400',   pill: 'bg-amber-400/20 text-amber-300 border border-amber-400/30' },
-  [TournamentStatus.IN_PROGRESS]:         { label: 'En curso',            dot: 'bg-blue-400',    pill: 'bg-blue-400/20 text-blue-300 border border-blue-400/30' },
-  [TournamentStatus.COMPLETED]:           { label: 'Finalizado',          dot: 'bg-purple-400',  pill: 'bg-purple-400/20 text-purple-300 border border-purple-400/30' },
-  [TournamentStatus.CANCELLED]:           { label: 'Cancelado',           dot: 'bg-red-400',     pill: 'bg-red-400/20 text-red-300 border border-red-400/30' },
+const STATUS_CONFIG: Record<TournamentStatus, { labelKey: string; dot: string; pill: string }> = {
+  [TournamentStatus.DRAFT]:               { labelKey: 'statusDraft',       dot: 'bg-slate-400',   pill: 'bg-slate-400/20 text-slate-300 border border-slate-400/30' },
+  [TournamentStatus.REGISTRATION_OPEN]:   { labelKey: 'statusOpen',        dot: 'bg-emerald-400', pill: 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30' },
+  [TournamentStatus.REGISTRATION_CLOSED]: { labelKey: 'statusClosed',      dot: 'bg-amber-400',   pill: 'bg-amber-400/20 text-amber-300 border border-amber-400/30' },
+  [TournamentStatus.IN_PROGRESS]:         { labelKey: 'statusInProgress',  dot: 'bg-blue-400',    pill: 'bg-blue-400/20 text-blue-300 border border-blue-400/30' },
+  [TournamentStatus.COMPLETED]:           { labelKey: 'statusCompleted',   dot: 'bg-purple-400',  pill: 'bg-purple-400/20 text-purple-300 border border-purple-400/30' },
+  [TournamentStatus.CANCELLED]:           { labelKey: 'statusCancelled',   dot: 'bg-red-400',     pill: 'bg-red-400/20 text-red-300 border border-red-400/30' },
 };
 
 const SPORT_BANNER: Record<string, { gradient: string; icon: ReactNode }> = {
   TENNIS: { gradient: 'from-yellow-400 via-lime-400 to-green-500', icon: <span className="text-4xl leading-none select-none">🎾</span> },
-  PADEL:  { gradient: 'from-teal-400 via-cyan-500 to-blue-500',   icon: <PadelPaddle /> },
+  PADEL:  { gradient: 'from-teal-400 via-cyan-500 to-blue-500',   icon: <PadelPaddle className="w-11 h-[50px]" /> },
 };
 
-const FORMAT_LABEL: Record<string, string> = {
-  SINGLE_ELIMINATION: 'Eliminación directa',
-  ROUND_ROBIN:        'Round Robin',
+const FORMAT_KEY: Record<string, string> = {
+  SINGLE_ELIMINATION: 'formatSingleElim',
+  ROUND_ROBIN:        'formatRoundRobin',
 };
-
-const FILTERS = [
-  { value: '',                               label: 'Todos' },
-  { value: TournamentStatus.REGISTRATION_OPEN,  label: 'Inscripción abierta' },
-  { value: TournamentStatus.IN_PROGRESS,        label: 'En curso' },
-  { value: TournamentStatus.COMPLETED,          label: 'Finalizados' },
-];
 
 export default function TournamentsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { get } = useApi();
   const router = useRouter();
+  const t = useTranslations('tournaments');
+
+  const FILTERS = [
+    { value: '',                                  label: t('filterAll') },
+    { value: TournamentStatus.REGISTRATION_OPEN,  label: t('filterOpen') },
+    { value: TournamentStatus.IN_PROGRESS,        label: t('filterInProgress') },
+    { value: TournamentStatus.COMPLETED,          label: t('filterCompleted') },
+  ];
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
@@ -123,10 +108,10 @@ export default function TournamentsPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Trophy className="w-4 h-4 text-amber-400" />
-                <span className="text-xs font-bold text-amber-400 tracking-widest uppercase">Competición oficial</span>
+                <span className="text-xs font-bold text-amber-400 tracking-widest uppercase">{t('badge')}</span>
               </div>
-              <h1 className="text-4xl font-black text-white tracking-tight mb-2">Torneos</h1>
-              <p className="text-slate-400 text-sm">Participa en torneos organizados por complejos deportivos</p>
+              <h1 className="text-4xl font-black text-white tracking-tight mb-2">{t('title')}</h1>
+              <p className="text-slate-400 text-sm">{t('subtitle')}</p>
             </div>
             {user?.role === UserRole.COMPLEX && (
               <Button
@@ -135,7 +120,7 @@ export default function TournamentsPage() {
                 icon={<Plus className="w-4 h-4" />}
                 className="shrink-0"
               >
-                Crear torneo
+                {t('createBtn')}
               </Button>
             )}
           </div>
@@ -145,15 +130,15 @@ export default function TournamentsPage() {
             <div className="flex gap-6 mt-8 pt-8 border-t border-white/8">
               <div className="glass rounded-xl px-5 py-3">
                 <p className="text-xl font-black text-white">{tournaments.length}</p>
-                <p className="text-xs text-slate-400">Total torneos</p>
+                <p className="text-xs text-slate-400">{t('statTotal')}</p>
               </div>
               <div className="glass rounded-xl px-5 py-3">
                 <p className="text-xl font-black text-emerald-400">{openCount}</p>
-                <p className="text-xs text-slate-400">Inscripción abierta</p>
+                <p className="text-xs text-slate-400">{t('statOpen')}</p>
               </div>
               <div className="glass rounded-xl px-5 py-3">
                 <p className="text-xl font-black text-blue-400">{liveCount}</p>
-                <p className="text-xs text-slate-400">En curso</p>
+                <p className="text-xs text-slate-400">{t('statLive')}</p>
               </div>
             </div>
           )}
@@ -190,7 +175,7 @@ export default function TournamentsPage() {
                   onChange={(e) => setSelectedComplexId(e.target.value)}
                   className="px-3 py-2.5 text-sm font-medium rounded-xl border transition-all duration-150 focus:outline-none appearance-none bg-slate-800 border-slate-700 text-slate-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500/30"
                 >
-                  <option value="">Todos los complejos</option>
+                  <option value="">{t('allComplexes')}</option>
                   {complexes.map((c) => (
                     <option key={c.id} value={c.id}>{c.name} — {c.city}</option>
                   ))}
@@ -212,8 +197,8 @@ export default function TournamentsPage() {
             <div className="w-16 h-16 rounded-2xl bg-slate-700 flex items-center justify-center mb-5 mx-auto">
               <Frown className="w-8 h-8 text-slate-400" />
             </div>
-            <p className="text-lg font-bold text-slate-100 mb-2">No se encontraron torneos</p>
-            <p className="text-sm text-slate-500 max-w-xs">Sé el primero en organizar un torneo</p>
+            <p className="text-lg font-bold text-slate-100 mb-2">{t('noTournamentsTitle')}</p>
+            <p className="text-sm text-slate-500 max-w-xs">{t('noTournamentsDesc')}</p>
           </div>
         ) : showSections ? (
           <div className="space-y-10">
@@ -222,12 +207,12 @@ export default function TournamentsPage() {
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Inscripción abierta · {featuredTournaments.length} torneos
+                  {t('sectionOpen', { count: featuredTournaments.length })}
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {featuredTournaments.map((t) => (
-                  <TournamentCard key={t.id} tournament={t} sport={sportById(t.sportId)} featured />
+                {featuredTournaments.map((tour) => (
+                  <TournamentCard key={tour.id} tournament={tour} sport={sportById(tour.sportId)} featured t={t} />
                 ))}
               </div>
             </section>
@@ -235,11 +220,11 @@ export default function TournamentsPage() {
             {otherTournaments.length > 0 && (
               <section>
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                  Otros torneos · {otherTournaments.length}
+                  {t('sectionOther', { count: otherTournaments.length })}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {otherTournaments.map((t) => (
-                    <TournamentCard key={t.id} tournament={t} sport={sportById(t.sportId)} />
+                  {otherTournaments.map((tour) => (
+                    <TournamentCard key={tour.id} tournament={tour} sport={sportById(tour.sportId)} t={t} />
                   ))}
                 </div>
               </section>
@@ -248,11 +233,11 @@ export default function TournamentsPage() {
         ) : (
           <>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
-              {filtered.length} torneos
+              {t('countLabel', { count: filtered.length })}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map((t) => (
-                <TournamentCard key={t.id} tournament={t} sport={sportById(t.sportId)} />
+              {filtered.map((tour) => (
+                <TournamentCard key={tour.id} tournament={tour} sport={sportById(tour.sportId)} t={t} />
               ))}
             </div>
           </>
@@ -268,10 +253,12 @@ function TournamentCard({
   tournament,
   sport,
   featured = false,
+  t,
 }: {
   tournament: Tournament;
   sport: Sport | undefined;
   featured?: boolean;
+  t: ReturnType<typeof useTranslations<'tournaments'>>;
 }) {
   const banner = SPORT_BANNER[sport?.name ?? ''] ?? { gradient: 'from-slate-600 to-slate-800', icon: <span className="text-4xl leading-none select-none">🏆</span> };
   const status = STATUS_CONFIG[tournament.status] ?? STATUS_CONFIG[TournamentStatus.DRAFT];
@@ -305,7 +292,7 @@ function TournamentCard({
           <div className="absolute top-3 right-3">
             <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full backdrop-blur-sm', status.pill)}>
               <span className={cn('w-1.5 h-1.5 rounded-full', tournament.status === TournamentStatus.REGISTRATION_OPEN && 'animate-pulse', status.dot)} />
-              {status.label}
+              {t(status.labelKey as Parameters<typeof t>[0])}
             </span>
           </div>
         </div>
@@ -323,7 +310,7 @@ function TournamentCard({
 
           <div className="mb-4">
             <span className="inline-block text-xs font-semibold text-slate-400 bg-slate-700 px-2.5 py-1 rounded-full border border-slate-600">
-              {FORMAT_LABEL[tournament.format] ?? tournament.format}
+              {FORMAT_KEY[tournament.format] ? t(FORMAT_KEY[tournament.format] as Parameters<typeof t>[0]) : tournament.format}
             </span>
           </div>
 
@@ -334,7 +321,7 @@ function TournamentCard({
                 {count} / {tournament.maxParticipants}
               </span>
               <span className={cn('font-bold', isFull ? 'text-amber-400' : 'text-emerald-400')}>
-                {isFull ? 'Completo' : `${tournament.maxParticipants - count} plazas`}
+                {isFull ? t('full') : t('spotsLeft', { count: tournament.maxParticipants - count })}
               </span>
             </div>
             <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
@@ -355,7 +342,7 @@ function TournamentCard({
               {new Date(tournament.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
             </div>
             <span className="flex items-center gap-1 text-xs font-bold text-slate-500 group-hover:text-teal-400 transition-colors">
-              Ver torneo
+              {t('viewTournament')}
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>

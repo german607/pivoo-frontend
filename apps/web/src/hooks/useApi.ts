@@ -18,6 +18,15 @@ export function useApi() {
     });
   };
 
+  const doUpload = (path: string, accessToken: string | undefined, body: FormData, baseUrl?: string) => {
+    const base = baseUrl ?? process.env.NEXT_PUBLIC_API_URL;
+    return fetch(`${base}${path}`, {
+      method: 'POST',
+      body,
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    });
+  };
+
   const request = async <T,>(path: string, options?: RequestInit & { baseUrl?: string }): Promise<T> => {
     let res = await doFetch(path, tokens?.accessToken, options);
 
@@ -47,6 +56,28 @@ export function useApi() {
     return res.json();
   };
 
+  const upload = async <T,>(path: string, body: FormData, opts?: { baseUrl?: string }): Promise<T> => {
+    let res = await doUpload(path, tokens?.accessToken, body, opts?.baseUrl);
+
+    if (res.status === 401) {
+      try {
+        const newTokens = await refreshTokens();
+        res = await doUpload(path, newTokens.accessToken, body, opts?.baseUrl);
+      } catch {
+        logout();
+        router.push('/login');
+        throw new Error('Session expired');
+      }
+    }
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: 'Request failed' }));
+      throw new Error(error.message || 'Request failed');
+    }
+
+    return res.json();
+  };
+
   return {
     get: <T,>(path: string, opts?: { baseUrl?: string }) =>
       request<T>(path, { method: 'GET', ...opts }),
@@ -58,5 +89,6 @@ export function useApi() {
       request<T>(path, { method: 'PUT', body: JSON.stringify(body), ...opts }),
     delete: <T,>(path: string, opts?: { baseUrl?: string }) =>
       request<T>(path, { method: 'DELETE', ...opts }),
+    upload,
   };
 }

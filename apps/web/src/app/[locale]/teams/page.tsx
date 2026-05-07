@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
 import { Header } from '@/components/Header';
-import { Card, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { Link, useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { Plus, Users, Trophy, ChevronRight, Bell } from 'lucide-react';
@@ -71,7 +71,7 @@ export default function TeamsPage() {
       <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">{tc('loading')}</p>
+          <p className="text-slate-400">{tc('loading')}</p>
         </div>
       </div>
     );
@@ -85,8 +85,8 @@ export default function TeamsPage() {
         {/* Page header */}
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-1">{t('pageTitle')}</h1>
-            <p className="text-gray-500">{t('pageSubtitle')}</p>
+            <h1 className="text-4xl font-bold text-white mb-1">{t('pageTitle')}</h1>
+            <p className="text-slate-400">{t('pageSubtitle')}</p>
           </div>
           <Button
             variant="primary"
@@ -100,24 +100,24 @@ export default function TeamsPage() {
         {/* Pending invitations banner */}
         {invitations.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <Bell className="w-5 h-5 text-amber-500" />
+            <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <Bell className="w-5 h-5 text-amber-400" />
               {t('invitationsTitle')}
             </h2>
             <div className="space-y-3">
               {invitations.map((inv) => (
                 <div
                   key={inv.id}
-                  className="flex items-center justify-between bg-white border border-amber-200 rounded-xl p-4 shadow-sm"
+                  className="flex items-center justify-between bg-amber-500/10 border border-amber-500/30 rounded-xl p-4"
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow"
                       style={{ background: inv.team.color }}
                     >
                       {inv.team.name.slice(0, 2).toUpperCase()}
                     </div>
-                    <p className="font-medium text-gray-900">{inv.team.name}</p>
+                    <p className="font-medium text-white">{inv.team.name}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="primary" onClick={() => respond(inv.id, true)}>
@@ -135,10 +135,10 @@ export default function TeamsPage() {
 
         {/* Teams grid */}
         {teams.length === 0 ? (
-          <Card className="text-center py-20">
-            <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-xl font-semibold text-gray-700 mb-2">{t('noTeams')}</p>
-            <p className="text-gray-500 mb-6">{t('noTeamsDesc')}</p>
+          <div className="bg-slate-800 border border-slate-700/60 rounded-2xl text-center py-20 px-8">
+            <Users className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+            <p className="text-xl font-semibold text-white mb-2">{t('noTeams')}</p>
+            <p className="text-slate-400 mb-6">{t('noTeamsDesc')}</p>
             <Button
               variant="primary"
               icon={<Plus className="w-4 h-4" />}
@@ -146,49 +146,45 @@ export default function TeamsPage() {
             >
               {t('createTeam')}
             </Button>
-          </Card>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {teams.map((team) => (
               <Link key={team.id} href={`/teams/${team.id}`}>
-                <div className="group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg hover:border-teal-200 transition-all duration-200 p-6 cursor-pointer">
+                <div className="group bg-slate-800 rounded-2xl border border-slate-700/60 shadow-[0_2px_12px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer">
                   {/* Top accent line using team color */}
-                  <div
-                    className="h-1 rounded-full mb-5 opacity-80 group-hover:opacity-100 transition-opacity"
-                    style={{ background: team.color }}
-                  />
+                  <div className="h-1 w-full" style={{ background: team.color }} />
 
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      {/* Color avatar */}
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm"
-                        style={{ background: team.color }}
-                      >
-                        {team.name.slice(0, 2).toUpperCase()}
+                  <div className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow"
+                          style={{ background: team.color }}
+                        >
+                          {team.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-lg group-hover:text-teal-400 transition-colors">
+                            {team.name}
+                          </h3>
+                          <p className="text-sm text-slate-400 flex items-center gap-1.5 mt-0.5">
+                            {t('members', { count: team._count.members })}
+                            {team.myRole === 'ADMIN' && (
+                              <span className="px-2 py-0.5 bg-teal-500/20 text-teal-400 rounded-full text-xs font-medium border border-teal-500/30">
+                                Admin
+                              </span>
+                            )}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-lg group-hover:text-teal-700 transition-colors">
-                          {team.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {t('members', { count: team._count.members })}
-                          {team.myRole === 'ADMIN' && (
-                            <span className="ml-2 px-2 py-0.5 bg-teal-50 text-teal-700 rounded-full text-xs font-medium">
-                              Admin
-                            </span>
-                          )}
-                        </p>
-                      </div>
+                      <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-teal-400 transition-colors mt-1" />
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 transition-colors mt-1" />
-                  </div>
 
-                  <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
+                    <div className="mt-4 flex items-center gap-1.5 text-sm text-slate-500">
                       <Trophy className="w-4 h-4 text-amber-400" />
-                      {team.sportId ? team.sportId : t('allSports')}
-                    </span>
+                      <span>{team.sportId ? team.sportId : t('allSports')}</span>
+                    </div>
                   </div>
                 </div>
               </Link>

@@ -81,6 +81,10 @@ export interface User {
   role: UserRole;
   avatarUrl: string | null;
   bio: string | null;
+  country: string | null;
+  city: string | null;
+  phone: string | null;
+  birthDate: string | null;
   sportStats: UserSportStats[];
 }
 
@@ -90,6 +94,7 @@ export interface UserSportStats {
   matchesWon: number;
   rankingPoints: number;
   level: SkillLevel;
+  category: MatchCategory | null;
 }
 
 export interface Sport {

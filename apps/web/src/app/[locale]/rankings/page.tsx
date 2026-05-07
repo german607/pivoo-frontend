@@ -1,149 +1,85 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/auth';
-import { useApi } from '@/hooks/useApi';
-import { User, SKILL_LEVEL_LABELS } from '@pivoo/shared';
 import { Header } from '@/components/Header';
-import { Card } from '@/components/ui';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import { useSearchParams } from 'next/navigation';
+import { Trophy, Star, TrendingUp, Medal, ArrowLeft, Sparkles } from 'lucide-react';
 
 export default function RankingsPage() {
-  const { isLoading: authLoading } = useAuth();
-  const { get } = useApi();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const t = useTranslations('rankings');
-  const tc = useTranslations('common');
 
-  const [rankings, setRankings] = useState<(User & { rank: number })[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedSport, setSelectedSport] = useState(searchParams.get('sport') || 'TENNIS');
-
-  useEffect(() => {
-    if (!authLoading) {
-      loadRankings();
-    }
-  }, [authLoading, selectedSport]);
-
-  const loadRankings = async () => {
-    setIsLoading(true);
-    try {
-      const data = await get<User[]>(
-        `/api/v1/users/rankings?sportId=${selectedSport}&limit=50`,
-        { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL }
-      );
-
-      const withRank = (data || []).map((user, index) => ({
-        ...user,
-        rank: index + 1,
-      }));
-
-      setRankings(withRank);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-slate-900">
-        <Header />
-        <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">{tc('loading')}</p>
-        </div>
-      </div>
-    );
-  }
+  const FEATURES = [
+    { icon: Trophy,     text: t('feature1') },
+    { icon: TrendingUp, text: t('feature2') },
+    { icon: Medal,      text: t('feature3') },
+    { icon: Star,       text: t('feature4') },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-900">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-6 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{t('title')}</h1>
-          <div className="flex gap-4">
-            {['TENNIS', 'PADEL'].map((sport) => (
-              <button
-                key={sport}
-                onClick={() => setSelectedSport(sport)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  selectedSport === sport
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-                }`}
-              >
-                {sport}
-              </button>
-            ))}
+      {/* Decorative background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-teal-500/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal-400/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-0 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl" />
+      </div>
+
+      <main className="relative max-w-2xl mx-auto px-6 py-20 flex flex-col items-center text-center">
+
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-bold uppercase tracking-widest mb-10">
+          <Sparkles className="w-3 h-3" />
+          {t('comingSoonBadge')}
+        </div>
+
+        {/* Icon */}
+        <div className="relative mb-8">
+          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center shadow-xl shadow-teal-500/25">
+            <Trophy className="w-12 h-12 text-white" strokeWidth={1.5} />
+          </div>
+          <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-amber-400 flex items-center justify-center shadow-lg shadow-amber-500/30">
+            <Star className="w-3.5 h-3.5 text-white fill-white" />
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center h-96">
-            <p className="text-gray-500">{t('loadingRankings')}</p>
-          </div>
-        ) : rankings.length === 0 ? (
-          <Card>
-            <p className="text-gray-500 text-center">{t('noRankings')}</p>
-          </Card>
-        ) : (
-          <Card>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-bold text-gray-900">{t('colRank')}</th>
-                    <th className="text-left py-3 px-4 font-bold text-gray-900">{t('colPlayer')}</th>
-                    <th className="text-center py-3 px-4 font-bold text-gray-900">{t('colMatches')}</th>
-                    <th className="text-center py-3 px-4 font-bold text-gray-900">{t('colWon')}</th>
-                    <th className="text-center py-3 px-4 font-bold text-gray-900">{t('colPoints')}</th>
-                    <th className="text-left py-3 px-4 font-bold text-gray-900">{t('colLevel')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rankings.map((user) => {
-                    const stat = user.sportStats?.find((s) => s.sportId === selectedSport);
-                    return (
-                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          <span className="font-bold text-lg text-green-600">{user.rank}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <button
-                            onClick={() => router.push(`/users/${user.id}`)}
-                            className="hover:underline text-gray-900 font-medium"
-                          >
-                            {user.name || user.username}
-                          </button>
-                        </td>
-                        <td className="py-3 px-4 text-center text-gray-600">
-                          {stat?.matchesPlayed || 0}
-                        </td>
-                        <td className="py-3 px-4 text-center text-gray-600">
-                          {stat?.matchesWon || 0}
-                        </td>
-                        <td className="py-3 px-4 text-center font-bold text-gray-900">
-                          {stat?.rankingPoints || 1000}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                            {stat ? SKILL_LEVEL_LABELS[stat.level] : 'BEGINNER'}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+        {/* Headline */}
+        <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight mb-4">
+          {t('comingSoonTitle')}
+          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-teal-300">
+            {t('comingSoonTitleHighlight')}
+          </span>
+        </h1>
+
+        <p className="text-slate-400 text-base leading-relaxed max-w-md mb-14">
+          {t('comingSoonDesc')}
+        </p>
+
+        {/* Feature list */}
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mb-14">
+          {FEATURES.map(({ icon: Icon, text }) => (
+            <div
+              key={text}
+              className="flex items-center gap-3 px-4 py-3.5 bg-slate-800/60 border border-slate-700/60 rounded-2xl text-left"
+            >
+              <div className="w-8 h-8 rounded-xl bg-teal-500/10 flex items-center justify-center shrink-0">
+                <Icon className="w-4 h-4 text-teal-400" strokeWidth={1.5} />
+              </div>
+              <span className="text-sm font-medium text-slate-300">{text}</span>
             </div>
-          </Card>
-        )}
+          ))}
+        </div>
+
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 rounded-xl transition-all duration-150"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {t('backBtn')}
+        </button>
       </main>
     </div>
   );

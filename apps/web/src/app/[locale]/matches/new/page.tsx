@@ -5,9 +5,13 @@ import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
 import { Sport, SportComplex, SkillLevel, MatchCategory, MatchGender } from '@pivoo/shared';
 import { Header } from '@/components/Header';
-import { Card, Input, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
+
+const SELECT_CLS = 'w-full px-4 py-2.5 bg-slate-700 border border-slate-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed';
+const INPUT_CLS  = 'w-full px-4 py-2.5 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500';
+const LABEL_CLS  = 'block text-sm font-medium text-slate-300 mb-2';
 
 export default function CreateMatchPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -51,7 +55,6 @@ export default function CreateMatchPage() {
       router.push('/login');
       return;
     }
-
     loadData();
   }, [user, authLoading]);
 
@@ -61,7 +64,6 @@ export default function CreateMatchPage() {
         get<Sport[]>('/api/v1/sports', { baseUrl: process.env.NEXT_PUBLIC_SPORTS_API_URL }),
         get<SportComplex[]>('/api/v1/complexes', { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL }),
       ]);
-
       setSports(sportsData || []);
       setComplexes(complexesData || []);
     } catch (err) {
@@ -114,7 +116,7 @@ export default function CreateMatchPage() {
       <div className="min-h-screen bg-slate-900">
         <Header />
         <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">{tc('loading')}</p>
+          <p className="text-slate-400">{tc('loading')}</p>
         </div>
       </div>
     );
@@ -125,12 +127,14 @@ export default function CreateMatchPage() {
       <Header />
 
       <main className="max-w-2xl mx-auto px-6 py-12">
-        <Card>
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">{t('title')}</h1>
+        <div className="bg-slate-800 rounded-2xl border border-slate-700/60 shadow-[0_2px_12px_rgba(0,0,0,0.3)] p-8">
+          <h1 className="text-2xl font-bold text-white mb-8">{t('title')}</h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* Sport */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t('sport')}</label>
+              <label className={LABEL_CLS}>{t('sport')}</label>
               <select
                 value={formData.sportId}
                 onChange={(e) => {
@@ -138,41 +142,40 @@ export default function CreateMatchPage() {
                   const defaultPlayers = sport ? sport.maxPlayers : 2;
                   setFormData({ ...formData, sportId: e.target.value, maxPlayers: defaultPlayers, minPlayers: defaultPlayers });
                 }}
-                className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className={SELECT_CLS}
                 required
               >
                 <option value="">{t('sportPlaceholder')}</option>
                 {sports.map((sport) => (
-                  <option key={sport.id} value={sport.id}>
-                    {sport.name}
-                  </option>
+                  <option key={sport.id} value={sport.id}>{sport.name}</option>
                 ))}
               </select>
             </div>
 
+            {/* Complex */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{t('complex')}</label>
-              <div className="flex rounded-lg border border-gray-300 overflow-hidden mb-2">
+              <label className={LABEL_CLS}>{t('complex')}</label>
+              <div className="flex rounded-lg border border-slate-600 overflow-hidden mb-2">
                 <button
                   type="button"
                   onClick={() => { setComplexMode('registered'); setFormData((f) => ({ ...f, complexName: '' })); }}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${complexMode === 'registered' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${complexMode === 'registered' ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                 >
-                  Complejo registrado
+                  {t('complexRegistered')}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setComplexMode('custom'); setFormData((f) => ({ ...f, complexId: '', courtId: '' })); }}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${complexMode === 'custom' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${complexMode === 'custom' ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                 >
-                  Otro
+                  {t('complexOther')}
                 </button>
               </div>
               {complexMode === 'registered' ? (
                 <select
                   value={formData.complexId}
                   onChange={(e) => setFormData({ ...formData, complexId: e.target.value })}
-                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className={SELECT_CLS}
                 >
                   <option value="">{t('complexPlaceholder')}</option>
                   {complexes.map((complex) => (
@@ -186,19 +189,20 @@ export default function CreateMatchPage() {
                   type="text"
                   value={formData.complexName}
                   onChange={(e) => setFormData({ ...formData, complexName: e.target.value })}
-                  placeholder="Ej: Club Atlético Palermo"
-                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder={t('complexCustomPlaceholder')}
+                  className={INPUT_CLS}
                 />
               )}
             </div>
 
+            {/* Court */}
             {courts.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('court')}</label>
+                <label className={LABEL_CLS}>{t('court')}</label>
                 <select
                   value={formData.courtId}
                   onChange={(e) => setFormData({ ...formData, courtId: e.target.value })}
-                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className={SELECT_CLS}
                   required
                 >
                   <option value="">{t('courtPlaceholder')}</option>
@@ -211,103 +215,106 @@ export default function CreateMatchPage() {
               </div>
             )}
 
+            {/* Date + Time */}
             <div className="grid grid-cols-2 gap-4">
-              <Input
-                label={t('date')}
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                required
-              />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('time')}</label>
+                <label className={LABEL_CLS}>{t('date')}</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  className={INPUT_CLS + ' [color-scheme:dark]'}
+                  required
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLS}>{t('time')}</label>
                 <select
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className={SELECT_CLS}
                   required
                 >
                   <option value="">{t('timePlaceholder')}</option>
                   {timeSlots.map((slot) => (
-                    <option key={slot} value={slot}>
-                      {slot}
-                    </option>
+                    <option key={slot} value={slot}>{slot}</option>
                   ))}
                 </select>
               </div>
             </div>
 
+            {/* Players */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Jugadores totales</label>
+                <label className={LABEL_CLS}>{t('totalPlayers')}</label>
                 <select
                   value={formData.maxPlayers}
                   onChange={(e) => {
                     const n = parseInt(e.target.value);
                     setFormData({ ...formData, maxPlayers: n, minPlayers: n });
                   }}
-                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100 disabled:text-gray-400"
+                  className={SELECT_CLS}
                   required
                   disabled={!selectedSport}
                 >
-                  {!selectedSport && <option value="">Seleccioná un deporte primero</option>}
+                  {!selectedSport && <option value="">{t('selectSportFirst')}</option>}
                   {playerOptions.map((n) => (
-                    <option key={n} value={n}>{n} jugadores</option>
+                    <option key={n} value={n}>{t('nPlayers', { count: n })}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Jugadores que faltan</label>
+                <label className={LABEL_CLS}>{t('spotsNeeded')}</label>
                 <select
                   disabled={!selectedSport}
-                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-gray-100 disabled:text-gray-400"
+                  className={SELECT_CLS}
                 >
                   {!selectedSport && <option value="">—</option>}
                   {Array.from({ length: formData.maxPlayers - 1 }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>{n === 1 ? '1 jugador' : `${n} jugadores`}</option>
+                    <option key={n} value={n}>{t('nPlayers', { count: n })}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Nivel / Categoría toggle */}
+            {/* Participation requirement */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Requisito de participación</label>
-              <div className="flex rounded-lg border border-gray-300 overflow-hidden mb-3">
+              <label className={LABEL_CLS}>{t('participationReq')}</label>
+              <div className="flex rounded-lg border border-slate-600 overflow-hidden mb-3">
                 <button
                   type="button"
                   onClick={() => { setFilterType('level'); setFormData((f) => ({ ...f, requiredCategory: '' })); }}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'level' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-slate-600'}`}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'level' ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                 >
-                  Por nivel
+                  {t('byLevel')}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setFilterType('category'); setFormData((f) => ({ ...f, requiredLevel: '' })); }}
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'category' ? 'bg-green-600 text-white' : 'bg-white text-gray-700 hover:bg-slate-600'}`}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${filterType === 'category' ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                 >
-                  Por categoría
+                  {t('byCategory')}
                 </button>
               </div>
               {filterType === 'level' ? (
                 <select
                   value={formData.requiredLevel}
                   onChange={(e) => setFormData({ ...formData, requiredLevel: e.target.value })}
-                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className={SELECT_CLS}
                 >
-                  <option value="">Sin requisito de nivel</option>
-                  <option value={SkillLevel.BEGINNER}>Principiante</option>
-                  <option value={SkillLevel.INTERMEDIATE}>Intermedio</option>
-                  <option value={SkillLevel.ADVANCED}>Avanzado</option>
-                  <option value={SkillLevel.PROFESSIONAL}>Profesional</option>
+                  <option value="">{t('noLevelReq')}</option>
+                  <option value={SkillLevel.BEGINNER}>{t('levelBeginner')}</option>
+                  <option value={SkillLevel.INTERMEDIATE}>{t('levelIntermediate')}</option>
+                  <option value={SkillLevel.ADVANCED}>{t('levelAdvanced')}</option>
+                  <option value={SkillLevel.PROFESSIONAL}>{t('levelProfessional')}</option>
                 </select>
               ) : (
                 <select
                   value={formData.requiredCategory}
                   onChange={(e) => setFormData({ ...formData, requiredCategory: e.target.value })}
-                  className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className={SELECT_CLS}
                 >
-                  <option value="">Sin requisito de categoría</option>
+                  <option value="">{t('noCategoryReq')}</option>
                   {Object.values(MatchCategory).map((cat) => (
                     <option key={cat} value={cat}>{cat.charAt(0) + cat.slice(1).toLowerCase()}</option>
                   ))}
@@ -315,34 +322,40 @@ export default function CreateMatchPage() {
               )}
             </div>
 
+            {/* Gender */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Género</label>
+              <label className={LABEL_CLS}>{t('gender')}</label>
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full px-4 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className={SELECT_CLS}
               >
-                <option value="">Sin restricción de género</option>
-                <option value={MatchGender.MASCULINO}>Masculino</option>
-                <option value={MatchGender.FEMENINO}>Femenino</option>
-                <option value={MatchGender.MIXTO}>Mixto</option>
+                <option value="">{t('noGenderReq')}</option>
+                <option value={MatchGender.MASCULINO}>{t('genderMale')}</option>
+                <option value={MatchGender.FEMENINO}>{t('genderFemale')}</option>
+                <option value={MatchGender.MIXTO}>{t('genderMixed')}</option>
               </select>
             </div>
 
-            <Input
-              label={t('description')}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder={t('descriptionPlaceholder')}
-            />
+            {/* Description */}
+            <div>
+              <label className={LABEL_CLS}>{t('description')}</label>
+              <input
+                type="text"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder={t('descriptionPlaceholder')}
+                className={INPUT_CLS}
+              />
+            </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400">
                 {error}
               </div>
             )}
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex gap-4 pt-2">
               <Button type="submit" variant="primary" isLoading={isSubmitting} className="flex-1">
                 {t('submit')}
               </Button>
@@ -356,7 +369,7 @@ export default function CreateMatchPage() {
               </Button>
             </div>
           </form>
-        </Card>
+        </div>
       </main>
     </div>
   );
