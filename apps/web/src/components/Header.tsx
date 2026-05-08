@@ -3,13 +3,26 @@
 import { useAuth } from '@/contexts/auth';
 import { Link, useRouter, usePathname } from '@/navigation';
 import { Menu, X, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { UserRole } from '@pivoo/shared';
+const avatarCache = new Map<string, string | null>();
 
 export function Header() {
-  const { user, logout } = useAuth();
+  const { user, logout, tokens } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user || !tokens) { setAvatarUrl(null); return; }
+    if (avatarCache.has(user.id)) { setAvatarUrl(avatarCache.get(user.id) ?? null); return; }
+    fetch(`${process.env.NEXT_PUBLIC_USERS_API_URL}/api/v1/users/me`, {
+      headers: { Authorization: `Bearer ${tokens.accessToken}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { const url = data?.avatarUrl ?? null; avatarCache.set(user.id, url); setAvatarUrl(url); })
+      .catch(() => {});
+  }, [user?.id, tokens?.accessToken]);
   const t = useTranslations('header');
   const locale = useLocale();
   const router = useRouter();
@@ -74,8 +87,10 @@ export function Header() {
                   href="/profile"
                   className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150"
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                    {initials}
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0">
+                    {avatarUrl
+                      ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                      : initials}
                   </div>
                   <span className="text-xs font-medium text-slate-400 leading-none">{user.email.split('@')[0]}</span>
                 </Link>

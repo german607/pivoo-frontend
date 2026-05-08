@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
     "@pivoo/shared": "*",
     "@react-native-picker/picker": "2.7.5",
     "@react-navigation/native": "^6.1.0",
