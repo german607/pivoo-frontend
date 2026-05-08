@@ -88,10 +88,10 @@ export default function TeamDetailPage() {
       setEditName(teamData.name);
       setStats(statsData);
 
-      const ids = [...new Set([
+      const ids = Array.from(new Set([
         ...teamData.members.map((m) => m.userId),
         ...teamData.invitations.map((inv) => inv.invitedUserId),
-      ])];
+      ]));
       const profiles = await Promise.all(
         ids.map((id) =>
           get<UserProfile>(`/api/v1/users/${id}`, { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL }).catch(() => null),
