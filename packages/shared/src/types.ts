@@ -47,6 +47,11 @@ export enum MatchCategory {
   OCTAVA = 'OCTAVA',
 }
 
+export enum UserGender {
+  MASCULINO = 'MASCULINO',
+  FEMENINO = 'FEMENINO',
+}
+
 export enum MatchGender {
   MASCULINO = 'MASCULINO',
   FEMENINO = 'FEMENINO',
@@ -85,6 +90,7 @@ export interface User {
   city: string | null;
   phone: string | null;
   birthDate: string | null;
+  gender: UserGender | null;
   sportStats: UserSportStats[];
 }
 

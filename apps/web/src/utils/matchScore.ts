@@ -1,4 +1,4 @@
-import { Match, MatchStatus, ParticipantStatus, SkillLevel, MatchCategory, UserSportStats } from '@pivoo/shared';
+import { Match, MatchStatus, MatchGender, ParticipantStatus, SkillLevel, MatchCategory, UserSportStats, UserGender } from '@pivoo/shared';
 
 // ── Ordered maps ────────────────────────────────────────────────────────────
 
@@ -23,10 +23,11 @@ const CATEGORY_ORDER: Record<string, number> = {
 // ── Scoring ──────────────────────────────────────────────────────────────────
 
 /**
- * Returns a relevance score for a match given the current user's sport stats.
+ * Returns a relevance score for a match given the current user's profile.
  * Higher is more relevant. Past/terminal matches return a large negative value.
  *
  * Scoring axes:
+ *  - Gender compatibility (hard exclusion when mismatch)
  *  - Date proximity (works for all users)
  *  - Status / urgency
  *  - Level or category compatibility (only when user has stats for the sport)
@@ -36,6 +37,7 @@ export function scoreMatch(
   match: Match,
   userStats: UserSportStats[],
   now: Date,
+  userGender: UserGender | null = null,
 ): number {
   // Hard exclusions
   const hoursUntil = (new Date(match.scheduledAt).getTime() - now.getTime()) / 3_600_000;
@@ -44,6 +46,11 @@ export function scoreMatch(
   if (match.status === MatchStatus.IN_PROGRESS) return -100;
 
   let score = 0;
+
+  // Gender compatibility — exclude incompatible matches when the user has a gender set
+  if (userGender && match.gender && match.gender !== MatchGender.MIXTO) {
+    if ((match.gender as string) !== (userGender as string)) return -200;
+  }
 
   // 1. Date proximity — closer = more urgent = more interesting
   if (hoursUntil <= 24)       score += 25;
@@ -108,10 +115,11 @@ export function scoreMatch(
 export function sortByRelevance(
   matches: Match[],
   userStats: UserSportStats[],
+  userGender: UserGender | null = null,
   now = new Date(),
 ): Match[] {
   return [...matches].sort(
-    (a, b) => scoreMatch(b, userStats, now) - scoreMatch(a, userStats, now),
+    (a, b) => scoreMatch(b, userStats, now, userGender) - scoreMatch(a, userStats, now, userGender),
   );
 }
 
@@ -122,13 +130,14 @@ export function sortByRelevance(
 export function getRecommendedIds(
   matches: Match[],
   userStats: UserSportStats[],
+  userGender: UserGender | null = null,
   { topN = 3, minScore = 35 } = {},
 ): Set<string> {
   if (userStats.length === 0) return new Set();
   const now = new Date();
   return new Set(
     [...matches]
-      .map((m) => ({ id: m.id, score: scoreMatch(m, userStats, now) }))
+      .map((m) => ({ id: m.id, score: scoreMatch(m, userStats, now, userGender) }))
       .filter((x) => x.score >= minScore)
       .sort((a, b) => b.score - a.score)
       .slice(0, topN)

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
 import {
   User, Match, Sport, MatchStatus, Team,
-  SkillLevel, MatchCategory, SKILL_LEVEL_LABELS,
+  SkillLevel, MatchCategory, SKILL_LEVEL_LABELS, UserGender,
 } from '@pivoo/shared';
 import { Header } from '@/components/Header';
 import { Input, Button } from '@/components/ui';
@@ -576,7 +576,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [formData, setFormData] = useState({ name: '', bio: '', country: '', city: '', phone: '', birthDate: '' });
+  const [formData, setFormData] = useState({ name: '', bio: '', country: '', city: '', phone: '', birthDate: '', gender: '' });
   const [setupData, setSetupData] = useState({ username: '', name: '' });
   const [setupError, setSetupError] = useState('');
 
@@ -610,6 +610,7 @@ export default function ProfilePage() {
         city: userData.city || '',
         phone: userData.phone || '',
         birthDate: userData.birthDate ? userData.birthDate.slice(0, 10) : '',
+        gender: userData.gender || '',
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
@@ -664,6 +665,7 @@ export default function ProfilePage() {
         city: formData.city || undefined,
         phone: formData.phone || undefined,
         birthDate: formData.birthDate || undefined,
+        gender: (formData.gender as UserGender) || undefined,
       };
       await patch('/api/v1/users/me', payload, { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL });
       setIsEditing(false);
@@ -870,6 +872,18 @@ export default function ProfilePage() {
                     onChange={(v) => setFormData({ ...formData, birthDate: v })}
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">{t('genderLabel')}</label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  className={DARK_SELECT}
+                >
+                  <option value="">{t('genderUnspecified')}</option>
+                  <option value={UserGender.MASCULINO}>{t('genderMale')}</option>
+                  <option value={UserGender.FEMENINO}>{t('genderFemale')}</option>
+                </select>
               </div>
               <div className="flex gap-2 pt-1">
                 <button onClick={handleSave} disabled={isSaving}

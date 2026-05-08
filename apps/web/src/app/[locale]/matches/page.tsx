@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
-import { Match, Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, UserSportStats } from '@pivoo/shared';
+import { Match, Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, UserSportStats, UserGender } from '@pivoo/shared';
 import { sortByRelevance, getRecommendedIds } from '@/utils/matchScore';
 import { MatchCard } from '@/components/MatchCard';
 import { Header } from '@/components/Header';
@@ -34,6 +34,7 @@ export default function MatchesPage() {
   const [sports, setSports] = useState<Sport[]>([]);
   const [complexes, setComplexes] = useState<SportComplex[]>([]);
   const [userStats, setUserStats] = useState<UserSportStats[]>([]);
+  const [userGender, setUserGender] = useState<UserGender | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Filters
@@ -75,12 +76,13 @@ export default function MatchesPage() {
         get<Match[]>(`/api/v1/matches${query}`, { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL }),
         get<SportComplex[]>('/api/v1/complexes', { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL }),
         user
-          ? get<{ sportStats: UserSportStats[] }>('/api/v1/users/me', { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL }).catch(() => null)
+          ? get<{ sportStats: UserSportStats[]; gender: string | null }>('/api/v1/users/me', { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL }).catch(() => null)
           : Promise.resolve(null),
       ]);
       const freshComplexes = complexData || [];
       setComplexes(freshComplexes);
       setUserStats(profileData?.sportStats ?? []);
+      setUserGender((profileData?.gender as UserGender) ?? null);
       const complexMap = new Map(freshComplexes.map((c) => [c.id, c]));
       setMatches((data || []).map((m) => {
         const c = m.complexId ? complexMap.get(m.complexId) : undefined;
@@ -319,8 +321,8 @@ export default function MatchesPage() {
             </Button>
           </div>
         ) : (() => {
-          const sorted = sortByRelevance(filtered, userStats);
-          const recommendedIds = getRecommendedIds(filtered, userStats);
+          const sorted = sortByRelevance(filtered, userStats, userGender);
+          const recommendedIds = getRecommendedIds(filtered, userStats, userGender);
           const hasPersonalization = userStats.length > 0;
           return (
             <>
