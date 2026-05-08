@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
-import { Match, Sport, SportComplex, SkillLevel, MatchCategory, MatchGender } from '@pivoo/shared';
+import { Match, Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, UserSportStats } from '@pivoo/shared';
+import { sortByRelevance, getRecommendedIds } from '@/utils/matchScore';
 import { MatchCard } from '@/components/MatchCard';
 import { Header } from '@/components/Header';
 import { Input, Button, Skeleton } from '@/components/ui';
@@ -24,7 +25,7 @@ const GENDER_LABEL: Record<string, string> = {
 const SELECT_CLASS = 'px-3 py-2 text-sm font-medium rounded-xl border transition-all duration-150 focus:outline-none appearance-none bg-slate-800 border-slate-700 text-slate-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500/30';
 
 export default function MatchesPage() {
-  const { isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { get } = useApi();
   const router = useRouter();
   const t = useTranslations('matches');
@@ -32,6 +33,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [sports, setSports] = useState<Sport[]>([]);
   const [complexes, setComplexes] = useState<SportComplex[]>([]);
+  const [userStats, setUserStats] = useState<UserSportStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Filters
@@ -69,12 +71,16 @@ export default function MatchesPage() {
       if (selectedComplexId) params.set('complexId', selectedComplexId);
       const query = params.toString() ? `?${params}` : '';
 
-      const [data, complexData] = await Promise.all([
+      const [data, complexData, profileData] = await Promise.all([
         get<Match[]>(`/api/v1/matches${query}`, { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL }),
         get<SportComplex[]>('/api/v1/complexes', { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL }),
+        user
+          ? get<{ sportStats: UserSportStats[] }>('/api/v1/users/me', { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL }).catch(() => null)
+          : Promise.resolve(null),
       ]);
       const freshComplexes = complexData || [];
       setComplexes(freshComplexes);
+      setUserStats(profileData?.sportStats ?? []);
       const complexMap = new Map(freshComplexes.map((c) => [c.id, c]));
       setMatches((data || []).map((m) => {
         const c = m.complexId ? complexMap.get(m.complexId) : undefined;
@@ -312,18 +318,31 @@ export default function MatchesPage() {
               {t('createMatch')}
             </Button>
           </div>
-        ) : (
-          <>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
-              {filtered.length} partidos disponibles
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map((match) => (
-                <MatchCard key={match.id} match={match} sportName={sportNameById(match.sportId)} />
-              ))}
-            </div>
-          </>
-        )}
+        ) : (() => {
+          const sorted = sortByRelevance(filtered, userStats);
+          const recommendedIds = getRecommendedIds(filtered, userStats);
+          const hasPersonalization = userStats.length > 0;
+          return (
+            <>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                {sorted.length} partidos disponibles
+                {hasPersonalization && (
+                  <span className="ml-2 text-teal-500 normal-case font-medium">· ordenados por relevancia</span>
+                )}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {sorted.map((match) => (
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    sportName={sportNameById(match.sportId)}
+                    recommended={recommendedIds.has(match.id)}
+                  />
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </main>
     </div>
   );

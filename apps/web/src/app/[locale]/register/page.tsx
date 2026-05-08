@@ -72,7 +72,7 @@ export default function RegisterPage() {
         router.push('/complex');
       } else {
         await register(email, password, role);
-        router.push('/matches');
+        router.push('/');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errorFallback'));

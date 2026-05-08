@@ -18,6 +18,11 @@ interface TeamSummary {
   _count: { members: number };
 }
 
+interface Sport {
+  id: string;
+  name: string;
+}
+
 interface TeamInvitation {
   id: string;
   team: { id: string; name: string; color: string };
@@ -33,6 +38,7 @@ export default function TeamsPage() {
 
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
+  const [sportsMap, setSportsMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,12 +52,16 @@ export default function TeamsPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [teamsData, invData] = await Promise.all([
+      const [teamsData, invData, sportsData] = await Promise.all([
         get<TeamSummary[]>('/api/v1/teams/me', { baseUrl: process.env.NEXT_PUBLIC_TEAMS_API_URL }),
         get<TeamInvitation[]>('/api/v1/teams/invitations/me', { baseUrl: process.env.NEXT_PUBLIC_TEAMS_API_URL }),
+        get<Sport[]>('/api/v1/sports', { baseUrl: process.env.NEXT_PUBLIC_SPORTS_API_URL }).catch(() => []),
       ]);
       setTeams(teamsData || []);
       setInvitations(invData || []);
+      const map: Record<string, string> = {};
+      (sportsData || []).forEach((s) => { map[s.id] = s.name; });
+      setSportsMap(map);
     } catch {
       // silently fail — backend may not be up in dev
     } finally {
@@ -183,7 +193,7 @@ export default function TeamsPage() {
 
                     <div className="mt-4 flex items-center gap-1.5 text-sm text-slate-500">
                       <Trophy className="w-4 h-4 text-amber-400" />
-                      <span>{team.sportId ? team.sportId : t('allSports')}</span>
+                      <span>{team.sportId ? (sportsMap[team.sportId] ?? team.sportId) : t('allSports')}</span>
                     </div>
                   </div>
                 </div>

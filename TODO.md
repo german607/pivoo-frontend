@@ -26,6 +26,33 @@
 ### Monetizacion
 - [ ] Publicidad: agregar sponsored cards nativas (mismo estilo dark slate-800) inyectadas cada N elementos en listas de partidos y torneos
 
+### Plan Pro (suscripcion paga)
+Limites del plan gratuito que se desbloquean con Pro:
+
+**Equipos**
+- [ ] Free: 1 equipo por deporte. Pro: equipos ilimitados por deporte
+- [ ] Free: hasta 6 miembros por equipo. Pro: equipos ilimitados en miembros
+- [ ] Pro: estadisticas avanzadas del equipo (racha, historial vs oponentes, heatmap de rendimiento por mes)
+
+**Partidos**
+- [ ] Free: 1 partido creado por dia. Pro: partidos ilimitados
+- [ ] Free: partidos publicos solamente. Pro: partidos privados con codigo de invitacion
+- [ ] Pro: partido recurrente (crear una serie semanal con un solo click)
+
+**Torneos**
+- [ ] Free: 1 torneo activo a la vez, maximo 8 participantes. Pro: torneos ilimitados, hasta 64 participantes
+- [ ] Pro: bracket personalizable y fase de grupos antes de eliminacion directa
+
+**Perfil**
+- [ ] Pro: insignia verificada visible en el perfil y en los partidos
+- [ ] Pro: estadisticas extendidas (historial completo, evolucion de ranking con grafico)
+- [ ] Pro: perfil publico con URL personalizada (ej. pivoo.app/u/german)
+
+**Complejos (plan separado para role COMPLEX)**
+- [ ] Free: 1 complejo, hasta 3 canchas. Pro: complejos ilimitados, canchas ilimitadas
+- [ ] Pro: panel de analiticas (partidos jugados, canchas mas reservadas, pico de actividad)
+- [ ] Pro: publicar stories efimeras (24h) en el feed social
+
 ### Ideas
 - [ ] Partidos privados con codigo de invitacion
 - [ ] Chat dentro del partido

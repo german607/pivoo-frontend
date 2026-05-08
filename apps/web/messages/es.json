@@ -8,6 +8,7 @@
     "backToHome": "← Volver al inicio"
   },
   "header": {
+    "home": "Inicio",
     "matches": "Partidos",
     "tournaments": "Torneos",
     "rankings": "Clasificación",

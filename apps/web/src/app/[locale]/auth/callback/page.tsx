@@ -16,7 +16,7 @@ export default function OAuthCallbackPage() {
 
     if (accessToken && refreshToken) {
       loginWithTokens(accessToken, refreshToken);
-      router.replace('/matches');
+      router.replace('/');
     } else {
       router.replace('/login');
     }

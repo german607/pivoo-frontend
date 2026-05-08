@@ -323,31 +323,45 @@ export default function MatchDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {approved.map((p) => {
                 const teamConfig = p.team ? TEAM_COLORS[p.team] : null;
+                const isMe = p.userId === user?.id;
+                const isGuest = p.participantType === 'GUEST';
+                const canLink = !isMe && !isGuest && !!p.userId;
+                const avatar = (
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    {participantInitials(p)}
+                  </div>
+                );
+                const meta = (
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {isMe ? <span className="text-teal-400">Tú</span> : participantName(p)}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {isGuest && <span className="text-xs text-slate-500">{t('guest')}</span>}
+                      {p.userId === match.adminUserId && (
+                        <span className="inline-flex items-center gap-0.5 text-xs text-teal-400 font-medium">
+                          <Shield className="w-3 h-3" /> Admin
+                        </span>
+                      )}
+                      {teamConfig && (
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${teamConfig.bg} ${teamConfig.text}`}>
+                          {teamConfig.label}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
                 return (
                   <div key={p.id} className="flex items-center gap-3 p-3 bg-slate-700/40 rounded-xl">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {participantInitials(p)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
-                        {p.userId === user?.id ? <span className="text-teal-400">Tú</span> : participantName(p)}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {p.participantType === 'GUEST' && (
-                          <span className="text-xs text-slate-500">{t('guest')}</span>
-                        )}
-                        {p.userId === match.adminUserId && (
-                          <span className="inline-flex items-center gap-0.5 text-xs text-teal-400 font-medium">
-                            <Shield className="w-3 h-3" /> Admin
-                          </span>
-                        )}
-                        {teamConfig && (
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${teamConfig.bg} ${teamConfig.text}`}>
-                            {teamConfig.label}
-                          </span>
-                        )}
+                    {canLink ? (
+                      <Link href={`/profile/${p.userId}`} className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                        {avatar}{meta}
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {avatar}{meta}
                       </div>
-                    </div>
+                    )}
                     {isAdmin && (
                       <div className="flex items-center gap-1.5 shrink-0">
                         <select

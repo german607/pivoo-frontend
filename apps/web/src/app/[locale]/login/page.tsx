@@ -31,7 +31,7 @@ export default function LoginPage() {
         router.push('/complex');
       } else {
         await login(email, password);
-        router.push('/matches');
+        router.push('/');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errorFallback'));

@@ -29,9 +29,10 @@ const LEVEL_LABEL: Record<string, string> = {
 interface MatchCardProps {
   match: Match;
   sportName?: string;
+  recommended?: boolean;
 }
 
-export function MatchCard({ match, sportName }: MatchCardProps) {
+export function MatchCard({ match, sportName, recommended }: MatchCardProps) {
   const locale = useLocale();
   const sport = SPORT_CONFIG[sportName ?? ''] ?? { icon: <span className="text-5xl leading-none select-none">🏅</span>, gradient: 'from-slate-600 to-slate-700', label: sportName ?? '' };
   const status = STATUS_CONFIG[match.status] ?? STATUS_CONFIG.OPEN;
@@ -60,6 +61,11 @@ export function MatchCard({ match, sportName }: MatchCardProps) {
             <span className={cn('w-1.5 h-1.5 rounded-full animate-pulse', status.dot)} />
             {status.label}
           </span>
+          {recommended && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black text-teal-300 bg-teal-500/15 border border-teal-400/30 rounded-full tracking-wide uppercase">
+              Para ti
+            </span>
+          )}
         </div>
 
         {/* ── Sport banner ─────────────────── */}

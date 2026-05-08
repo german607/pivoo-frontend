@@ -8,6 +8,7 @@
     "backToHome": "← Back to home"
   },
   "header": {
+    "home": "Home",
     "matches": "Matches",
     "tournaments": "Tournaments",
     "rankings": "Rankings",

@@ -34,6 +34,7 @@ export function Header() {
   };
 
   const navLinks = [
+    { href: '/', label: t('home') },
     { href: '/matches', label: t('matches') },
     { href: '/tournaments', label: t('tournaments') },
     { href: '/rankings', label: t('rankings') },

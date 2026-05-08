@@ -9,12 +9,19 @@ import { Button } from '@/components/ui';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { Users, Trophy, TrendingUp, UserMinus, Crown, Send, Trash2 } from 'lucide-react';
+import { Link } from '@/navigation';
 
 interface TeamMember {
   id: string;
   userId: string;
   role: 'ADMIN' | 'MEMBER';
   joinedAt: string;
+}
+
+interface UserProfile {
+  id: string;
+  name: string | null;
+  email: string;
 }
 
 interface TeamDetail {
@@ -49,6 +56,8 @@ export default function TeamDetailPage() {
 
   const [team, setTeam] = useState<TeamDetail | null>(null);
   const [stats, setStats] = useState<TeamStats | null>(null);
+  const [usersMap, setUsersMap] = useState<Record<string, UserProfile>>({});
+  const [sportsMap, setSportsMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [inviteUserId, setInviteUserId] = useState('');
   const [isSendingInvite, setIsSendingInvite] = useState(false);
@@ -67,13 +76,30 @@ export default function TeamDetailPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [teamData, statsData] = await Promise.all([
+      const [teamData, statsData, sportsData] = await Promise.all([
         get<TeamDetail>(`/api/v1/teams/${teamId}`, { baseUrl: process.env.NEXT_PUBLIC_TEAMS_API_URL }),
         get<TeamStats>(`/api/v1/teams/${teamId}/stats`, { baseUrl: process.env.NEXT_PUBLIC_TEAMS_API_URL }).catch(() => null),
+        get<{ id: string; name: string }[]>('/api/v1/sports', { baseUrl: process.env.NEXT_PUBLIC_SPORTS_API_URL }).catch(() => []),
       ]);
+      const sm: Record<string, string> = {};
+      (sportsData || []).forEach((s) => { sm[s.id] = s.name; });
+      setSportsMap(sm);
       setTeam(teamData);
       setEditName(teamData.name);
       setStats(statsData);
+
+      const ids = [...new Set([
+        ...teamData.members.map((m) => m.userId),
+        ...teamData.invitations.map((inv) => inv.invitedUserId),
+      ])];
+      const profiles = await Promise.all(
+        ids.map((id) =>
+          get<UserProfile>(`/api/v1/users/${id}`, { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL }).catch(() => null),
+        ),
+      );
+      const map: Record<string, UserProfile> = {};
+      profiles.forEach((p) => { if (p) map[p.id] = p; });
+      setUsersMap(map);
     } catch {
       setTeam(null);
     } finally {
@@ -184,7 +210,7 @@ export default function TeamDetailPage() {
                 )}
                 <p className="text-slate-400 text-sm mt-1">
                   {team.members.length} {t('members').toLowerCase()}
-                  {team.sportId && ` · ${team.sportId}`}
+                  {team.sportId && ` · ${sportsMap[team.sportId] ?? team.sportId}`}
                 </p>
               </div>
             </div>
@@ -217,28 +243,45 @@ export default function TeamDetailPage() {
                     key={member.id}
                     className="flex items-center justify-between p-3 rounded-xl bg-slate-700/40 hover:bg-slate-700/70 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
-                        <span className="text-white text-sm font-bold">
-                          {member.userId.slice(0, 2).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">
-                          {member.userId === user?.id ? (
-                            <span className="text-teal-400">{t('you')}</span>
-                          ) : (
-                            member.userId
-                          )}
-                        </p>
-                        {member.role === 'ADMIN' && (
-                          <span className="inline-flex items-center gap-1 text-xs text-amber-400 font-medium">
-                            <Crown className="w-3 h-3" />
-                            {t('admin')}
+                    {member.userId === user?.id ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">
+                            {(usersMap[member.userId]?.name || usersMap[member.userId]?.email || member.userId).slice(0, 2).toUpperCase()}
                           </span>
-                        )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">
+                            <span className="text-teal-400">{t('you')}</span>
+                          </p>
+                          {member.role === 'ADMIN' && (
+                            <span className="inline-flex items-center gap-1 text-xs text-amber-400 font-medium">
+                              <Crown className="w-3 h-3" />
+                              {t('admin')}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <Link href={`/profile/${member.userId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">
+                            {(usersMap[member.userId]?.name || usersMap[member.userId]?.email || member.userId).slice(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">
+                            {usersMap[member.userId]?.name || usersMap[member.userId]?.email || member.userId}
+                          </p>
+                          {member.role === 'ADMIN' && (
+                            <span className="inline-flex items-center gap-1 text-xs text-amber-400 font-medium">
+                              <Crown className="w-3 h-3" />
+                              {t('admin')}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    )}
 
                     {isAdmin && member.userId !== user?.id && (
                       <button
@@ -281,7 +324,7 @@ export default function TeamDetailPage() {
                       <div className="space-y-1">
                         {team.invitations.map((inv) => (
                           <p key={inv.id} className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1">
-                            {inv.invitedUserId}
+                            {usersMap[inv.invitedUserId]?.name || usersMap[inv.invitedUserId]?.email || inv.invitedUserId}
                           </p>
                         ))}
                       </div>
