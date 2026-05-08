@@ -69,3 +69,4 @@ Limites del plan gratuito que se desbloquean con Pro:
 - [ ] Sugerencias de conexion post-partido: "jugaste con estos jugadores, seguirlos?"
 - [ ] Trending local: seccion en el feed con los torneos y partidos mas populares de tu zona esta semana
 - [ ] Reacciones a publicaciones: emojis de reaccion rapida (fuego, raqueta, etc.) sin necesidad de comentar
+
