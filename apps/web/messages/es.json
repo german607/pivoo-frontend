@@ -441,6 +441,13 @@
     "openRegistration": "Abrir inscripciones",
     "closeRegistration": "Cerrar inscripciones"
   },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No tienes notificaciones",
+    "loading": "Cargando...",
+    "markRead": "Marcar como leída",
+    "markAllRead": "Marcar todas como leídas"
+  },
   "complexDashboard": {
     "title": "Panel de control",
     "subtitle": "Gestiona tu complejo deportivo",

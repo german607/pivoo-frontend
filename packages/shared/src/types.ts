@@ -168,6 +168,29 @@ export interface MatchParticipant {
   joinedAt?: string;
 }
 
+export enum NotificationType {
+  MATCH_INVITATION = 'MATCH_INVITATION',
+  MATCH_JOIN_APPROVED = 'MATCH_JOIN_APPROVED',
+  MATCH_JOIN_REJECTED = 'MATCH_JOIN_REJECTED',
+  MATCH_CANCELLED = 'MATCH_CANCELLED',
+  MATCH_RESULT_RECORDED = 'MATCH_RESULT_RECORDED',
+  TOURNAMENT_REGISTRATION_APPROVED = 'TOURNAMENT_REGISTRATION_APPROVED',
+  TOURNAMENT_REGISTRATION_REJECTED = 'TOURNAMENT_REGISTRATION_REJECTED',
+  TOURNAMENT_BRACKET_GENERATED = 'TOURNAMENT_BRACKET_GENERATED',
+  TOURNAMENT_FINALIZED = 'TOURNAMENT_FINALIZED',
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  data: { matchId?: string; sportId?: string; tournamentId?: string; winnerTeam?: string } | null;
+  read: boolean;
+  createdAt: string;
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;

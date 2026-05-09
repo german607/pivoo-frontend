@@ -441,6 +441,13 @@
     "openRegistration": "Open registration",
     "closeRegistration": "Close registration"
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "loading": "Loading...",
+    "markRead": "Mark as read",
+    "markAllRead": "Mark all as read"
+  },
   "complexDashboard": {
     "title": "Dashboard",
     "subtitle": "Manage your sports complex",

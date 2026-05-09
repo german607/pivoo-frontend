@@ -2,8 +2,10 @@
 
 import { useAuth } from '@/contexts/auth';
 import { Link, useRouter, usePathname } from '@/navigation';
-import { Menu, X, LogOut } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Menu, X, LogOut, Bell } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationPanel } from './NotificationPanel';
 import { useTranslations, useLocale } from 'next-intl';
 import { UserRole } from '@pivoo/shared';
 const avatarCache = new Map<string, string | null>();
@@ -12,6 +14,9 @@ export function Header() {
   const { user, logout, tokens } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { notifications, unreadCount, loading, fetchNotifications, markRead, markAllRead } = useNotifications();
+  const handleNotifOpen = useCallback(() => { fetchNotifications(); }, [fetchNotifications]);
 
   useEffect(() => {
     if (!user || !tokens) { setAvatarUrl(null); return; }
@@ -84,6 +89,30 @@ export function Header() {
 
             {user ? (
               <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+                <div className="relative">
+                  <button
+                    onClick={() => setNotifOpen((v) => !v)}
+                    className="relative p-2 text-slate-400 hover:text-white hover:bg-white/8 rounded-lg transition-all duration-150"
+                    title="Notificaciones"
+                  >
+                    <Bell className="w-4 h-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-0.5 text-[9px] font-black text-white bg-red-500 rounded-full flex items-center justify-center leading-none">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {notifOpen && (
+                    <NotificationPanel
+                      notifications={notifications}
+                      loading={loading}
+                      onClose={() => setNotifOpen(false)}
+                      onMarkRead={markRead}
+                      onMarkAllRead={markAllRead}
+                      onOpen={handleNotifOpen}
+                    />
+                  )}
+                </div>
                 <Link
                   href="/profile"
                   className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg hover:bg-white/8 transition-all duration-150"
