@@ -297,8 +297,8 @@ export default function MatchDetailPage() {
                   </div>
                 </div>
                 <Button variant="outline" size="sm"
-                  onClick={() => act(myParticipant.id + '_rm', () => del(`/api/v1/matches/${matchId}/participants/${myParticipant.id}`, MAPI))}
-                  isLoading={actionLoading === myParticipant.id + '_rm'}>
+                  onClick={() => act('leave', () => del(`/api/v1/matches/${matchId}/leave`, MAPI))}
+                  isLoading={actionLoading === 'leave'}>
                   {t('leaveMatch')}
                 </Button>
               </div>
