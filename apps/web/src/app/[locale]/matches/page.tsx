@@ -6,9 +6,10 @@ import { useApi } from '@/hooks/useApi';
 import { Match, Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, UserSportStats, UserGender } from '@pivoo/shared';
 import { sortByRelevance, getRecommendedIds } from '@/utils/matchScore';
 import { MatchCard } from '@/components/MatchCard';
+import { MyMatchesDrawer } from '@/components/MyMatchesDrawer';
 import { Header } from '@/components/Header';
 import { Input, Button, Skeleton } from '@/components/ui';
-import { Plus, Search, Frown, SlidersHorizontal, X, ChevronRight } from 'lucide-react';
+import { Plus, Search, Frown, SlidersHorizontal, X, ChevronRight, CalendarDays } from 'lucide-react';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/utils/cn';
@@ -36,6 +37,7 @@ export default function MatchesPage() {
   const [userStats, setUserStats] = useState<UserSportStats[]>([]);
   const [userGender, setUserGender] = useState<UserGender | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [myMatchesOpen, setMyMatchesOpen] = useState(false);
 
   // Filters
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -168,14 +170,24 @@ export default function MatchesPage() {
               <h1 className="text-4xl font-black text-white tracking-tight mb-2">{t('title')}</h1>
               <p className="text-slate-400 text-sm">{t('subtitle')}</p>
             </div>
-            <Button
-              onClick={() => router.push('/matches/new')}
-              variant="primary"
-              icon={<Plus className="w-4 h-4" />}
-              className="shrink-0"
-            >
-              {t('createMatch')}
-            </Button>
+            <div className="flex flex-col gap-2 shrink-0">
+              <Button
+                onClick={() => router.push('/matches/new')}
+                variant="primary"
+                icon={<Plus className="w-4 h-4" />}
+              >
+                {t('createMatch')}
+              </Button>
+              {user && (
+                <button
+                  onClick={() => setMyMatchesOpen(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-violet-300 bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 hover:border-violet-500/50 rounded-xl transition-all duration-150"
+                >
+                  <CalendarDays className="w-4 h-4" />
+                  Mis partidos
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Search + filter button */}
@@ -346,6 +358,12 @@ export default function MatchesPage() {
           );
         })()}
       </main>
+
+      <MyMatchesDrawer
+        open={myMatchesOpen}
+        onClose={() => setMyMatchesOpen(false)}
+        sports={sports}
+      />
     </div>
   );
 }
