@@ -1,37 +1,24 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from './useApi';
 import { Notification } from '@pivoo/shared';
 
 const NOTIFICATIONS_API = process.env.NEXT_PUBLIC_NOTIFICATIONS_API_URL;
-const POLL_INTERVAL = 30_000;
 
 export function useNotifications() {
-  const { user } = useAuth();
+  const { user, tokens } = useAuth();
   const api = useApi();
-  // Keep a ref so callbacks never go stale without being re-created
   const apiRef = useRef(api);
   apiRef.current = api;
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   const userId = user?.id ?? null;
-
-  const fetchUnreadCount = useCallback(async () => {
-    if (!userId) return;
-    try {
-      const data = await apiRef.current.get<{ count: number }>(
-        '/api/v1/notifications/unread-count',
-        { baseUrl: NOTIFICATIONS_API },
-      );
-      setUnreadCount(data.count);
-    } catch {
-      // silently ignore polling errors
-    }
-  }, [userId]);
+  const accessToken = tokens?.accessToken ?? null;
 
   const fetchNotifications = useCallback(async () => {
     if (!userId) return;
@@ -78,20 +65,46 @@ export function useNotifications() {
     }
   }, []);
 
+  // WebSocket: connect when logged in, disconnect on logout
+  useEffect(() => {
+    if (!userId || !accessToken || !NOTIFICATIONS_API) return;
+
+    const socket = io(`${NOTIFICATIONS_API}/notifications`, {
+      auth: { token: accessToken },
+      transports: ['websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 3000,
+    });
+
+    socketRef.current = socket;
+
+    socket.on('notification', (incoming: Notification) => {
+      setNotifications((prev) => {
+        // avoid duplicates if already present
+        if (prev.some((n) => n.id === incoming.id)) return prev;
+        return [incoming, ...prev];
+      });
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    // Fetch existing notifications once on connect
+    socket.on('connect', () => {
+      fetchNotifications();
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [userId, accessToken, fetchNotifications]);
+
+  // Clear state on logout
   useEffect(() => {
     if (!userId) {
       setNotifications([]);
       setUnreadCount(0);
-      return;
     }
-
-    fetchUnreadCount();
-    intervalRef.current = setInterval(fetchUnreadCount, POLL_INTERVAL);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [userId, fetchUnreadCount]);
+  }, [userId]);
 
   return { notifications, unreadCount, loading, fetchNotifications, markRead, markAllRead };
 }
-

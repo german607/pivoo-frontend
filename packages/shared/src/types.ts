@@ -178,6 +178,7 @@ export enum NotificationType {
   TOURNAMENT_REGISTRATION_REJECTED = 'TOURNAMENT_REGISTRATION_REJECTED',
   TOURNAMENT_BRACKET_GENERATED = 'TOURNAMENT_BRACKET_GENERATED',
   TOURNAMENT_FINALIZED = 'TOURNAMENT_FINALIZED',
+  USER_FOLLOWED = 'USER_FOLLOWED',
 }
 
 export interface Notification {
@@ -186,7 +187,7 @@ export interface Notification {
   type: NotificationType;
   title: string;
   body: string;
-  data: { matchId?: string; sportId?: string; tournamentId?: string; winnerTeam?: string } | null;
+  data: { matchId?: string; sportId?: string; tournamentId?: string; winnerTeam?: string; followerId?: string } | null;
   read: boolean;
   createdAt: string;
 }

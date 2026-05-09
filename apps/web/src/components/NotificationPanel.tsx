@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import { X, Bell, Check, CheckCheck, Trophy, Calendar, UserCheck, UserX, XCircle, BarChart2 } from 'lucide-react';
+import { X, Bell, Check, CheckCheck, Trophy, Calendar, UserCheck, UserX, XCircle, BarChart2, UserPlus } from 'lucide-react';
 import { Notification, NotificationType } from '@pivoo/shared';
 
 interface Props {
@@ -36,6 +36,8 @@ function notificationIcon(type: NotificationType) {
       return <Trophy className={`${cls} text-amber-400`} />;
     case NotificationType.TOURNAMENT_FINALIZED:
       return <Trophy className={`${cls} text-amber-400`} />;
+    case NotificationType.USER_FOLLOWED:
+      return <UserPlus className={`${cls} text-teal-400`} />;
     default:
       return <Bell className={`${cls} text-slate-400`} />;
   }
