@@ -106,6 +106,12 @@ export default function MatchesPage() {
       ].some((s) => s.toLowerCase().includes(term));
       if (!match) return false;
     }
+
+    // Auto gender filter: exclude incompatible matches when user has gender set
+    if (userGender && m.gender && m.gender !== MatchGender.MIXTO) {
+      if ((m.gender as string) !== (userGender as string)) return false;
+    }
+
     if (selectedGender && m.gender !== selectedGender) return false;
     if (selectedLevel && m.requiredLevel !== selectedLevel) return false;
     if (selectedCategory && m.requiredCategory !== selectedCategory) return false;
