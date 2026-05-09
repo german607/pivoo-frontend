@@ -58,6 +58,11 @@ export enum MatchGender {
   MIXTO = 'MIXTO',
 }
 
+export enum MatchMode {
+  INDIVIDUAL = 'INDIVIDUAL',
+  TEAM_VS_TEAM = 'TEAM_VS_TEAM',
+}
+
 export enum MatchStatus {
   OPEN = 'OPEN',
   FULL = 'FULL',
@@ -142,6 +147,7 @@ export interface Match {
   requiredLevel: SkillLevel | null;
   requiredCategory: MatchCategory | null;
   gender: MatchGender | null;
+  mode: MatchMode;
   status: MatchStatus;
   description: string | null;
   participants: MatchParticipant[];

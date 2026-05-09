@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
-import { Match, Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, UserSportStats, UserGender } from '@pivoo/shared';
+import { Match, Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, MatchMode, UserSportStats, UserGender } from '@pivoo/shared';
 import { sortByRelevance, getRecommendedIds } from '@/utils/matchScore';
 import { MatchCard } from '@/components/MatchCard';
 import { MyMatchesDrawer } from '@/components/MyMatchesDrawer';
@@ -50,6 +50,7 @@ export default function MatchesPage() {
   const [selectedDateFilter, setSelectedDateFilter] = useState<'' | 'today' | 'thisWeek' | 'thisMonth'>('');
   const [selectedDate, setSelectedDate] = useState('');
   const [dateExpanded, setDateExpanded] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<'' | MatchMode.INDIVIDUAL | MatchMode.TEAM_VS_TEAM>('');
 
   useEffect(() => {
     if (!authLoading) loadSports();
@@ -112,6 +113,7 @@ export default function MatchesPage() {
       if ((m.gender as string) !== (userGender as string)) return false;
     }
 
+    if (selectedMode && m.mode !== selectedMode) return false;
     if (selectedGender && m.gender !== selectedGender) return false;
     if (selectedLevel && m.requiredLevel !== selectedLevel) return false;
     if (selectedCategory && m.requiredCategory !== selectedCategory) return false;
@@ -142,7 +144,7 @@ export default function MatchesPage() {
     return true;
   });
 
-  const activeFilterCount = [selectedSportId, selectedComplexId, selectedGender, selectedLevel, selectedCategory, selectedDateFilter, selectedDate]
+  const activeFilterCount = [selectedSportId, selectedComplexId, selectedGender, selectedLevel, selectedCategory, selectedDateFilter, selectedDate, selectedMode]
     .filter(Boolean).length;
 
   const clearFilters = () => {
@@ -155,6 +157,7 @@ export default function MatchesPage() {
     setSelectedDate('');
     setDateExpanded(false);
     setSearchTerm('');
+    setSelectedMode('');
   };
 
   return (
@@ -241,6 +244,14 @@ export default function MatchesPage() {
                 <select value={selectedComplexId} onChange={(e) => setSelectedComplexId(e.target.value)} className={SELECT_CLASS}>
                   <option value="">Todos</option>
                   {complexes.map((c) => <option key={c.id} value={c.id}>{c.name} — {c.city}</option>)}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Modo</span>
+                <select value={selectedMode} onChange={(e) => setSelectedMode(e.target.value as any)} className={SELECT_CLASS}>
+                  <option value="">Todos</option>
+                  <option value={MatchMode.INDIVIDUAL}>Individual</option>
+                  <option value={MatchMode.TEAM_VS_TEAM}>Parejas</option>
                 </select>
               </div>
               <div className="flex flex-col gap-1">

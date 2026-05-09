@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
 import { useUserProfiles } from '@/hooks/useUserProfiles';
-import { Match, MatchParticipant, ParticipantStatus, Team, MatchCategory, MatchGender } from '@pivoo/shared';
+import { Match, MatchParticipant, ParticipantStatus, Team, MatchCategory, MatchGender, MatchMode } from '@pivoo/shared';
 import { Header } from '@/components/Header';
 import { Button, Skeleton } from '@/components/ui';
 import { Link, useRouter } from '@/navigation';
@@ -51,6 +51,7 @@ export default function MatchDetailPage() {
   const [guestTeam, setGuestTeam] = useState('');
   const [resultWinner, setResultWinner] = useState<Team | ''>('');
   const [resultSets, setResultSets] = useState([{ setNumber: 1, teamAScore: '', teamBScore: '' }]);
+  const [challengePartnerId, setChallengePartnerId] = useState('');
 
   const allUserIds = (match?.participants ?? []).map((p) => p.userId).filter((id): id is string => !!id);
   const { getName, getInitials } = useUserProfiles(allUserIds);
@@ -116,6 +117,14 @@ export default function MatchDetailPage() {
     }, MAPI));
     setInviteUserId(''); setInviteTeam('');
   };
+  const handleChallenge = async () => {
+    if (!challengePartnerId.trim()) return;
+    await act('challenge', () => post(`/api/v1/matches/${matchId}/challenge`, { partnerId: challengePartnerId.trim() }, MAPI));
+    setChallengePartnerId('');
+  };
+  const handleApproveChallenge = () => act('approveChallenge', () => post(`/api/v1/matches/${matchId}/approve-challenge`, {}, MAPI));
+  const handleRejectChallenge  = () => act('rejectChallenge',  () => post(`/api/v1/matches/${matchId}/reject-challenge`,  {}, MAPI));
+
   const handleAddGuest = async () => {
     if (!guestFirst.trim() || !guestLast.trim()) return;
     await act('guest', () => post(`/api/v1/matches/${matchId}/guests`, {
@@ -147,9 +156,14 @@ export default function MatchDetailPage() {
     );
   }
 
-  const approved      = match.participants.filter((p) => p.status === ParticipantStatus.APPROVED);
-  const pending       = match.participants.filter((p) => p.status === ParticipantStatus.PENDING);
-  const invitedPending= match.participants.filter((p) => p.status === ParticipantStatus.INVITED);
+  const approved        = match.participants.filter((p) => p.status === ParticipantStatus.APPROVED);
+  const pending         = match.participants.filter((p) => p.status === ParticipantStatus.PENDING);
+  const invitedPending  = match.participants.filter((p) => p.status === ParticipantStatus.INVITED);
+  const isTeamVsTeam    = match.mode === MatchMode.TEAM_VS_TEAM;
+  const pendingTeamB    = pending.filter((p) => p.team === Team.TEAM_B);
+  const approvedTeamB   = approved.filter((p) => p.team === Team.TEAM_B);
+  const hasPendingChallenge = pendingTeamB.length > 0;
+  const hasApprovedTeamB    = approvedTeamB.length > 0;
   const pct           = Math.round((approved.length / match.maxPlayers) * 100);
   const isFull        = approved.length >= match.maxPlayers;
   const isAdmin       = match.adminUserId === user?.id;
@@ -193,6 +207,11 @@ export default function MatchDetailPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${statusColor}`}>{statusLabel}</span>
+                  {match.mode === MatchMode.TEAM_VS_TEAM && (
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                      {t('pairsMatch')}
+                    </span>
+                  )}
                   {isAdmin && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-400 bg-teal-500/20 px-2.5 py-1 rounded-full border border-teal-500/30">
                       <Shield className="w-3 h-3" /> Administrador
@@ -262,10 +281,36 @@ export default function MatchDetailPage() {
         {/* ── User action ─────────────────────────── */}
         {!isAdmin && user && (
           <div className="mb-5">
-            {!myParticipant && match.status === 'OPEN' && !isFull && (
+            {!myParticipant && match.status === 'OPEN' && !isFull && !isTeamVsTeam && (
               <Button variant="primary" size="lg" className="w-full" onClick={handleJoin} isLoading={actionLoading === 'join'}>
                 {t('requestJoin')}
               </Button>
+            )}
+
+            {/* ── Team vs Team: challenge form ── */}
+            {!myParticipant && match.status === 'OPEN' && isTeamVsTeam && !hasApprovedTeamB && (
+              hasPendingChallenge ? (
+                <div className="flex items-center gap-3 p-4 bg-violet-500/10 border border-violet-500/30 rounded-xl">
+                  <Clock className="w-5 h-5 text-violet-400 shrink-0" />
+                  <p className="text-sm font-medium text-violet-400">{t('challengePending')}</p>
+                </div>
+              ) : (
+                <div className="p-4 bg-slate-700/40 border border-slate-600/60 rounded-xl space-y-3">
+                  <p className="text-sm font-bold text-white">{t('challengeTitle')}</p>
+                  <div className="flex gap-2">
+                    <input
+                      value={challengePartnerId}
+                      onChange={(e) => setChallengePartnerId(e.target.value)}
+                      placeholder={t('challengePartnerPlaceholder')}
+                      className={`flex-1 px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500`}
+                    />
+                    <Button variant="primary" onClick={handleChallenge} isLoading={actionLoading === 'challenge'} disabled={!challengePartnerId.trim()}
+                      className="!bg-violet-600 hover:!bg-violet-500 !border-violet-600">
+                      {t('challengeBtn')}
+                    </Button>
+                  </div>
+                </div>
+              )
             )}
             {myStatus === ParticipantStatus.PENDING && (
               <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
@@ -393,9 +438,94 @@ export default function MatchDetailPage() {
           )}
         </div>
 
+        {/* ── Result display ───────────────────────── */}
+        {match.result && (
+          <div className={`${CARD} mb-5 border-amber-500/30`}>
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy className="w-5 h-5 text-amber-400" />
+              <h2 className="text-sm font-bold text-amber-400 uppercase tracking-wider">Resultado</h2>
+            </div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-sm text-slate-400">Ganador:</span>
+              <span className={`text-sm font-bold px-3 py-1 rounded-full ${match.result.winnerTeam === 'TEAM_A' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'}`}>
+                {match.result.winnerTeam === 'TEAM_A' ? 'Equipo A' : 'Equipo B'}
+              </span>
+            </div>
+            {match.result.sets.length > 0 && (
+              <div className="flex gap-3 flex-wrap">
+                {match.result.sets.map((s) => (
+                  <div key={s.setNumber} className="flex flex-col items-center bg-slate-700/60 rounded-xl px-4 py-3 border border-slate-600/50 min-w-[72px]">
+                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1.5">Set {s.setNumber}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xl font-black ${s.teamAScore > s.teamBScore ? 'text-blue-400' : 'text-slate-400'}`}>{s.teamAScore}</span>
+                      <span className="text-slate-600 font-bold text-lg">–</span>
+                      <span className={`text-xl font-black ${s.teamBScore > s.teamAScore ? 'text-orange-400' : 'text-slate-400'}`}>{s.teamBScore}</span>
+                    </div>
+                    <div className="flex items-center gap-4 mt-0.5">
+                      <span className="text-[9px] text-blue-400/60 font-medium">A</span>
+                      <span className="text-[9px] text-orange-400/60 font-medium">B</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Admin panel ──────────────────────────── */}
         {isAdmin && (
           <div className="space-y-5">
+
+            {/* Team B challenge (pairs mode) */}
+            {isTeamVsTeam && (
+              <div className={CARD}>
+                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  {t('teamBLabel')}
+                  {hasPendingChallenge && (
+                    <span className="bg-violet-500/20 text-violet-400 border border-violet-500/30 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                      {pendingTeamB.length}
+                    </span>
+                  )}
+                </h2>
+                {hasPendingChallenge ? (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      {pendingTeamB.map((p) => (
+                        <div key={p.id} className="flex items-center gap-3 p-3 bg-violet-500/10 rounded-xl border border-violet-500/20">
+                          <div className="w-9 h-9 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 text-xs font-bold shrink-0">
+                            {getInitials(p.userId)}
+                          </div>
+                          <p className="text-sm font-medium text-white flex-1 truncate">{getName(p.userId)}</p>
+                          <span className="text-xs text-violet-400 font-medium">Desafiante</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <Button variant="primary" className="flex-1" onClick={handleApproveChallenge} isLoading={actionLoading === 'approveChallenge'}>
+                        {t('challengeApproveBtn')}
+                      </Button>
+                      <Button variant="danger" className="flex-1" onClick={handleRejectChallenge} isLoading={actionLoading === 'rejectChallenge'}>
+                        {t('challengeRejectBtn')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : hasApprovedTeamB ? (
+                  <div className="space-y-2">
+                    {approvedTeamB.map((p) => (
+                      <div key={p.id} className="flex items-center gap-3 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold shrink-0">
+                          {getInitials(p.userId)}
+                        </div>
+                        <p className="text-sm font-medium text-white flex-1 truncate">{getName(p.userId)}</p>
+                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">{t('noChallengeYet')}</p>
+                )}
+              </div>
+            )}
 
             {/* Pending requests */}
             <div className={CARD}>
@@ -508,7 +638,7 @@ export default function MatchDetailPage() {
             </div>
 
             {/* Record result */}
-            {(match.status === 'IN_PROGRESS' || match.status === 'FULL') && (
+            {(match.status === 'IN_PROGRESS' || match.status === 'FULL' || match.status === 'OPEN') && !match.result && (
               <div className={CARD}>
                 <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Registrar resultado</h2>
                 <p className="text-xs text-slate-500 mb-4">Los sets son opcionales. Solo el equipo ganador es obligatorio.</p>

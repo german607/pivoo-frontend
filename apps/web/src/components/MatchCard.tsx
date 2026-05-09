@@ -1,6 +1,6 @@
 'use client';
 
-import { Match } from '@pivoo/shared';
+import { Match, MatchMode } from '@pivoo/shared';
 import { Link } from '@/navigation';
 import { Users, MapPin, Clock } from 'lucide-react';
 import { useLocale } from 'next-intl';
@@ -61,11 +61,18 @@ export function MatchCard({ match, sportName, recommended }: MatchCardProps) {
             <span className={cn('w-1.5 h-1.5 rounded-full animate-pulse', status.dot)} />
             {status.label}
           </span>
-          {recommended && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black text-teal-300 bg-teal-500/15 border border-teal-400/30 rounded-full tracking-wide uppercase">
-              Para ti
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {match.mode === MatchMode.TEAM_VS_TEAM && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black text-violet-300 bg-violet-500/15 border border-violet-400/30 rounded-full tracking-wide uppercase">
+                Parejas
+              </span>
+            )}
+            {recommended && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-black text-teal-300 bg-teal-500/15 border border-teal-400/30 rounded-full tracking-wide uppercase">
+                Para ti
+              </span>
+            )}
+          </div>
         </div>
 
         {/* ── Sport banner ─────────────────── */}

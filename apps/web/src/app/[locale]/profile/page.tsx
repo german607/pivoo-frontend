@@ -9,12 +9,12 @@ import {
 } from '@pivoo/shared';
 import { Header } from '@/components/Header';
 import { Input, Button } from '@/components/ui';
-import { useRouter } from '@/navigation';
+import { Link, useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import {
   MapPin, Clock, Users, Trophy, Plus, Minus,
   CheckCircle2, XCircle, Pencil, X, Check, Camera,
-  Globe, Phone, CalendarDays,
+  Globe, Phone, CalendarDays, ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { SportIcon, SPORT_EMOJI_STR } from '@/components/SportIcon';
@@ -303,7 +303,12 @@ function MyMatchCard({ match, sportName, isAdmin, onResultSaved }: {
           <SportIcon sport={sportName} className="w-5 h-[23px]" />
           <span className="text-sm font-bold text-white">{sportName}</span>
         </div>
-        <span className={cn('text-[10px] font-bold px-2.5 py-1 rounded-full border', statusCls)}>{statusText}</span>
+        <div className="flex items-center gap-2">
+          <span className={cn('text-[10px] font-bold px-2.5 py-1 rounded-full border', statusCls)}>{statusText}</span>
+          <Link href={`/matches/${match.id}`} className="flex items-center gap-0.5 text-xs font-semibold text-teal-400 hover:text-teal-300 transition-colors">
+            {t('viewMatch')} <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
       </div>
       <div className="px-4 py-3 space-y-2">
         <div className="flex items-center gap-1.5 text-slate-400">
@@ -951,18 +956,34 @@ export default function ProfilePage() {
                 <p className="text-slate-300 font-bold mb-1">{t('noMatches')}</p>
                 <p className="text-slate-500 text-sm">{t('noMatchesDesc')}</p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{t('matchCount', { count: matches.length })}</p>
-                {matches.map((match) => (
-                  <MyMatchCard key={match.id} match={match}
-                    sportName={sportNameById(match.sportId)}
-                    isAdmin={match.adminUserId === user?.id}
-                    onResultSaved={() => { setMatchesLoaded(false); loadMatches(); }}
-                  />
-                ))}
-              </div>
-            )}
+            ) : (() => {
+              const ACTIVE = new Set([MatchStatus.OPEN, MatchStatus.FULL, MatchStatus.IN_PROGRESS]);
+              const upcoming = [...matches].filter((m) => ACTIVE.has(m.status)).sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+              const past = [...matches].filter((m) => !ACTIVE.has(m.status)).sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime());
+              const renderCard = (match: Match) => (
+                <MyMatchCard key={match.id} match={match}
+                  sportName={sportNameById(match.sportId)}
+                  isAdmin={match.adminUserId === user?.id}
+                  onResultSaved={() => { setMatchesLoaded(false); loadMatches(); }}
+                />
+              );
+              return (
+                <div className="space-y-8">
+                  {upcoming.length > 0 && (
+                    <div className="space-y-4">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{t('upcomingMatches')} ({upcoming.length})</p>
+                      {upcoming.map(renderCard)}
+                    </div>
+                  )}
+                  {past.length > 0 && (
+                    <div className="space-y-4">
+                      <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{t('pastMatches')} ({past.length})</p>
+                      {past.map(renderCard)}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
       </main>

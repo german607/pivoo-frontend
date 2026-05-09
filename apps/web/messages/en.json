@@ -205,7 +205,13 @@
     "description": "Description (optional)",
     "descriptionPlaceholder": "Match details, notes, etc.",
     "submit": "Create Match",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "modeLabel": "Match mode",
+    "modeIndividual": "Individual",
+    "modePairs": "Pairs (team vs team)",
+    "pairsNote": "The match will be published with your Team A complete. Another team can challenge you.",
+    "partnerLabel": "Partner ID",
+    "partnerPlaceholder": "Enter your partner's ID"
   },
   "matchDetail": {
     "back": "← Back to matches",
@@ -241,7 +247,18 @@
     "noPendingRequests": "No pending requests",
     "participants": "Participants",
     "guest": "Guest",
-    "leaveMatch": "Leave match"
+    "leaveMatch": "Leave match",
+    "pairsMatch": "Pairs match",
+    "teamALabel": "Team A (home)",
+    "teamBLabel": "Team B (away)",
+    "challengeTitle": "Challenge this team",
+    "challengePartnerLabel": "Partner ID",
+    "challengePartnerPlaceholder": "Partner's ID",
+    "challengeBtn": "Challenge",
+    "challengePending": "Challenge pending approval",
+    "challengeApproveBtn": "Accept challenge",
+    "challengeRejectBtn": "Reject challenge",
+    "noChallengeYet": "Waiting for rival team"
   },
   "profile": {
     "editProfile": "Edit Profile",
@@ -313,7 +330,10 @@
     "matchStatusFull": "Full",
     "matchStatusInProgress": "In progress",
     "matchStatusCompleted": "Completed",
-    "matchStatusCancelled": "Cancelled"
+    "matchStatusCancelled": "Cancelled",
+    "upcomingMatches": "Upcoming",
+    "pastMatches": "Played",
+    "viewMatch": "View match"
   },
   "rankings": {
     "title": "Rankings",

@@ -205,7 +205,13 @@
     "description": "Descripción (opcional)",
     "descriptionPlaceholder": "Detalles del partido, notas, etc.",
     "submit": "Crear Partido",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "modeLabel": "Modo de partido",
+    "modeIndividual": "Individual",
+    "modePairs": "Parejas (equipo vs equipo)",
+    "pairsNote": "El partido se publicará con tu equipo A completo. Otro equipo puede desafiarlos.",
+    "partnerLabel": "ID de tu compañero/a",
+    "partnerPlaceholder": "Ingresá el ID de tu compañero/a"
   },
   "matchDetail": {
     "back": "← Volver a partidos",
@@ -241,7 +247,18 @@
     "noPendingRequests": "No hay solicitudes pendientes",
     "participants": "Participantes",
     "guest": "Invitado",
-    "leaveMatch": "Abandonar partido"
+    "leaveMatch": "Abandonar partido",
+    "pairsMatch": "Partido de parejas",
+    "teamALabel": "Equipo A (local)",
+    "teamBLabel": "Equipo B (visitante)",
+    "challengeTitle": "Desafiar a este equipo",
+    "challengePartnerLabel": "ID de tu compañero/a",
+    "challengePartnerPlaceholder": "ID del compañero/a",
+    "challengeBtn": "Desafiar",
+    "challengePending": "Desafío pendiente de aprobación",
+    "challengeApproveBtn": "Aceptar desafío",
+    "challengeRejectBtn": "Rechazar desafío",
+    "noChallengeYet": "Esperando equipo rival"
   },
   "profile": {
     "editProfile": "Editar perfil",
@@ -313,7 +330,10 @@
     "matchStatusFull": "Completo",
     "matchStatusInProgress": "En curso",
     "matchStatusCompleted": "Finalizado",
-    "matchStatusCancelled": "Cancelado"
+    "matchStatusCancelled": "Cancelado",
+    "upcomingMatches": "Próximos",
+    "pastMatches": "Jugados",
+    "viewMatch": "Ver partido"
   },
   "rankings": {
     "title": "Clasificación",

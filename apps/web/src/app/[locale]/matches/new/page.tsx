@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
-import { Sport, SportComplex, SkillLevel, MatchCategory, MatchGender } from '@pivoo/shared';
+import { Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, MatchMode } from '@pivoo/shared';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui';
 import { useRouter } from '@/navigation';
@@ -28,6 +28,8 @@ export default function CreateMatchPage() {
 
   const [complexMode, setComplexMode] = useState<'registered' | 'custom'>('registered');
   const [filterType, setFilterType] = useState<'level' | 'category'>('level');
+  const [matchMode, setMatchMode] = useState<MatchMode>(MatchMode.INDIVIDUAL);
+  const [partnerId, setPartnerId] = useState('');
   const [formData, setFormData] = useState({
     sportId: '',
     complexId: '',
@@ -82,11 +84,12 @@ export default function CreateMatchPage() {
       const { date, time, requiredLevel, requiredCategory, complexId, complexName, ...rest } = formData;
       const [y, mo, d] = date.split('-').map(Number);
       const [h, mi] = time.split(':').map(Number);
+      const isPairs = matchMode === MatchMode.TEAM_VS_TEAM;
       await post('/api/v1/matches', {
         ...rest,
         scheduledAt: new Date(y, mo - 1, d, h, mi, 0).toISOString(),
-        maxPlayers: parseInt(formData.maxPlayers.toString()),
-        minPlayers: parseInt(formData.minPlayers.toString()),
+        maxPlayers: isPairs ? 4 : parseInt(formData.maxPlayers.toString()),
+        minPlayers: isPairs ? 4 : parseInt(formData.minPlayers.toString()),
         ...(complexMode === 'registered' && complexId ? { complexId } : {}),
         ...(complexMode === 'custom' && complexName ? { complexName } : {}),
         courtId: formData.courtId || null,
@@ -94,6 +97,8 @@ export default function CreateMatchPage() {
         ...(requiredCategory ? { requiredCategory } : {}),
         gender: formData.gender || null,
         description: formData.description || null,
+        mode: matchMode,
+        ...(isPairs && partnerId.trim() ? { partnerId: partnerId.trim() } : {}),
       }, { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL });
 
       router.push('/matches');
@@ -151,6 +156,47 @@ export default function CreateMatchPage() {
                 ))}
               </select>
             </div>
+
+            {/* Mode */}
+            <div>
+              <label className={LABEL_CLS}>{t('modeLabel')}</label>
+              <div className="flex rounded-lg border border-slate-600 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setMatchMode(MatchMode.INDIVIDUAL)}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${matchMode === MatchMode.INDIVIDUAL ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+                >
+                  {t('modeIndividual')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchMode(MatchMode.TEAM_VS_TEAM)}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${matchMode === MatchMode.TEAM_VS_TEAM ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+                >
+                  {t('modePairs')}
+                </button>
+              </div>
+              {matchMode === MatchMode.TEAM_VS_TEAM && (
+                <p className="mt-2 text-xs text-slate-400 bg-slate-700/50 rounded-lg px-3 py-2 border border-slate-600/50">
+                  {t('pairsNote')}
+                </p>
+              )}
+            </div>
+
+            {/* Partner (pairs mode only) */}
+            {matchMode === MatchMode.TEAM_VS_TEAM && (
+              <div>
+                <label className={LABEL_CLS}>{t('partnerLabel')}</label>
+                <input
+                  type="text"
+                  value={partnerId}
+                  onChange={(e) => setPartnerId(e.target.value)}
+                  placeholder={t('partnerPlaceholder')}
+                  className={INPUT_CLS}
+                  required
+                />
+              </div>
+            )}
 
             {/* Complex */}
             <div>
@@ -243,8 +289,8 @@ export default function CreateMatchPage() {
               </div>
             </div>
 
-            {/* Players */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Players (hidden in pairs mode — locked to 4) */}
+            <div className={`grid grid-cols-2 gap-4 ${matchMode === MatchMode.TEAM_VS_TEAM ? 'opacity-50 pointer-events-none' : ''}`}>
               <div>
                 <label className={LABEL_CLS}>{t('totalPlayers')}</label>
                 <select
