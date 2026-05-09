@@ -94,3 +94,4 @@ export function useNotifications() {
 
   return { notifications, unreadCount, loading, fetchNotifications, markRead, markAllRead };
 }
+
