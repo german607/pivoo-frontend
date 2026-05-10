@@ -325,7 +325,7 @@ function MyMatchCard({ match, sportName, isAdmin, onResultSaved }: {
         )}
         <div className="flex items-center gap-1.5 text-slate-400">
           <Users className="w-3.5 h-3.5 shrink-0" />
-          <span className="text-xs">{match.participants.length} / {match.maxPlayers} jugadores</span>
+          <span className="text-xs">{match._count?.participants ?? (match.participants ?? []).length} / {match.maxPlayers} jugadores</span>
         </div>
         {match.result && (
           <div className="mt-2 pt-3 border-t border-slate-700">
@@ -639,7 +639,8 @@ export default function ProfilePage() {
       const complexMap = new Map((complexData || []).map((c) => [c.id, c]));
       setMatches((matchData || []).map((m) => {
         const c = m.complexId ? complexMap.get(m.complexId) : undefined;
-        return c ? { ...m, complex: { name: c.name, city: c.city } } : m;
+        const base = { ...m, participants: m.participants ?? [] };
+        return c ? { ...base, complex: { name: c.name, city: c.city } } : base;
       }));
       setMatchesLoaded(true);
     } catch { /* ignore */ }

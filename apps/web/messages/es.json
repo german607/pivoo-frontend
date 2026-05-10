@@ -206,11 +206,11 @@
     "descriptionPlaceholder": "Detalles del partido, notas, etc.",
     "submit": "Crear Partido",
     "cancel": "Cancelar",
-    "modeLabel": "Modo de partido",
+    "modeLabel": "Modo de busqueda",
     "modeIndividual": "Individual",
     "modePairs": "Parejas (equipo vs equipo)",
-    "pairsNote": "El partido se publicará con tu equipo A completo. Otro equipo puede desafiarlos.",
-    "partnerLabel": "ID de tu compañero/a",
+    "pairsNote": "Opcional. Si lo dejás vacío, el equipo quedará abierto para que alguien se sume. Otro equipo puede desafiarlos.",
+    "partnerLabel": "ID de tu compañero/a (opcional)",
     "partnerPlaceholder": "Ingresá el ID de tu compañero/a"
   },
   "matchDetail": {

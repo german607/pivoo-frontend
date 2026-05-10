@@ -151,6 +151,7 @@ export interface Match {
   status: MatchStatus;
   description: string | null;
   participants: MatchParticipant[];
+  _count?: { participants: number };
   complex?: { name: string; city: string };
   result?: MatchResult | null;
 }

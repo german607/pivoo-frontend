@@ -209,8 +209,8 @@
     "modeLabel": "Match mode",
     "modeIndividual": "Individual",
     "modePairs": "Pairs (team vs team)",
-    "pairsNote": "The match will be published with your Team A complete. Another team can challenge you.",
-    "partnerLabel": "Partner ID",
+    "pairsNote": "Optional. Leave blank and the team slot stays open for someone to join. Another team can challenge you.",
+    "partnerLabel": "Partner ID (optional)",
     "partnerPlaceholder": "Enter your partner's ID"
   },
   "matchDetail": {
