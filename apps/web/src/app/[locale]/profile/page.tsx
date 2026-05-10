@@ -14,7 +14,7 @@ import { useTranslations } from 'next-intl';
 import {
   MapPin, Clock, Users, Trophy, Plus, Minus,
   CheckCircle2, XCircle, Pencil, X, Check, Camera,
-  Globe, Phone, CalendarDays, ArrowRight,
+  Globe, Phone, CalendarDays, ArrowRight, RotateCcw,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { SportIcon, SPORT_EMOJI_STR } from '@/components/SportIcon';
@@ -284,17 +284,48 @@ function ResultForm({ matchId, onSaved }: { matchId: string; onSaved: () => void
 
 // ── MyMatchCard ──────────────────────────────────────────────
 
+const TIME_SLOTS = Array.from({ length: 36 }, (_, i) => {
+  const total = 6 * 60 + i * 30;
+  const h = String(Math.floor(total / 60)).padStart(2, '0');
+  const m = String(total % 60).padStart(2, '0');
+  return `${h}:${m}`;
+});
+
 function MyMatchCard({ match, sportName, isAdmin, onResultSaved }: {
   match: Match; sportName: string; isAdmin: boolean; onResultSaved: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [showRematch, setShowRematch] = useState(false);
+  const [rematchDate, setRematchDate] = useState('');
+  const [rematchTime, setRematchTime] = useState('');
+  const [rematchLoading, setRematchLoading] = useState(false);
+  const { post } = useApi();
+  const router = useRouter();
   const t = useTranslations('profile');
   const now = new Date();
   const matchDate = new Date(match.scheduledAt);
   const isPast = matchDate < now;
   const canRecord = isAdmin && !match.result && match.status !== MatchStatus.CANCELLED;
+  const canRematch = isAdmin && (match.status === MatchStatus.COMPLETED || match.status === MatchStatus.CANCELLED);
   const statusCls = STATUS_CLS[match.status] ?? STATUS_CLS.OPEN;
   const statusText = STATUS_KEY[match.status] ? t(STATUS_KEY[match.status] as Parameters<typeof t>[0]) : match.status;
+
+  const handleRematch = async () => {
+    if (!rematchDate || !rematchTime) return;
+    const [y, mo, d] = rematchDate.split('-').map(Number);
+    const [h, mi] = rematchTime.split(':').map(Number);
+    const scheduledAt = new Date(y, mo - 1, d, h, mi, 0).toISOString();
+    setRematchLoading(true);
+    try {
+      const newMatch = await post<{ id: string }>(
+        `/api/v1/matches/${match.id}/rematch`,
+        { scheduledAt },
+        { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL },
+      );
+      router.push(`/matches/${newMatch.id}`);
+    } catch { /* ignore */ }
+    finally { setRematchLoading(false); }
+  };
 
   return (
     <div className="bg-slate-800 rounded-2xl border border-slate-700/60 overflow-hidden">
@@ -353,6 +384,47 @@ function MyMatchCard({ match, sportName, isAdmin, onResultSaved }: {
               {showForm ? t('cancel') : t('saveResult')}
             </button>
             {showForm && <ResultForm matchId={match.id} onSaved={() => { setShowForm(false); onResultSaved(); }} />}
+          </div>
+        )}
+        {canRematch && (
+          <div className="mt-2 pt-3 border-t border-slate-700">
+            <button
+              onClick={() => setShowRematch((v) => !v)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-teal-400 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              {showRematch ? 'Cancelar' : 'Repetir partido'}
+            </button>
+            {showRematch && (
+              <div className="mt-3 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={rematchDate}
+                    onChange={(e) => setRematchDate(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-700 border border-slate-600 text-white rounded-xl focus:outline-none focus:border-teal-500 [color-scheme:dark]"
+                  />
+                  <select
+                    value={rematchTime}
+                    onChange={(e) => setRematchTime(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-700 border border-slate-600 text-white rounded-xl focus:outline-none focus:border-teal-500"
+                  >
+                    <option value="">Hora</option>
+                    {TIME_SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <button
+                  onClick={handleRematch}
+                  disabled={!rematchDate || !rematchTime || rematchLoading}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {rematchLoading
+                    ? <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <><RotateCcw className="w-3.5 h-3.5" /> Crear revancha</>
+                  }
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

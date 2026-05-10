@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useApi } from '@/hooks/useApi';
-import { Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, MatchMode } from '@pivoo/shared';
+import { Sport, SportComplex, SkillLevel, MatchCategory, MatchGender, MatchMode, MatchTemplate } from '@pivoo/shared';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import { ChevronDown, ChevronUp, MapPin } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, LayoutTemplate } from 'lucide-react';
 
 const SELECT_CLS = 'w-full px-4 py-2.5 bg-slate-700 border border-slate-600 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed';
 const INPUT_CLS  = 'w-full px-4 py-2.5 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500';
@@ -38,6 +38,11 @@ export default function CreateMatchPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  const [templates, setTemplates] = useState<MatchTemplate[]>([]);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState('');
 
   const [complexMode, setComplexMode] = useState<'registered' | 'custom'>('registered');
   const [matchMode, setMatchMode] = useState<MatchMode>(MatchMode.INDIVIDUAL);
@@ -70,14 +75,61 @@ export default function CreateMatchPage() {
 
   const loadData = async () => {
     try {
-      const [sportsData, complexesData] = await Promise.all([
+      const [sportsData, complexesData, templatesData] = await Promise.all([
         get<Sport[]>('/api/v1/sports', { baseUrl: process.env.NEXT_PUBLIC_SPORTS_API_URL }),
         get<SportComplex[]>('/api/v1/complexes', { baseUrl: process.env.NEXT_PUBLIC_COMPLEXES_API_URL }),
+        get<MatchTemplate[]>('/api/v1/matches/templates', { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL }).catch(() => []),
       ]);
       setSports(sportsData || []);
       setComplexes(complexesData || []);
+      setTemplates(templatesData || []);
     } catch { /* ignore */ }
     finally { setIsLoading(false); }
+  };
+
+  const applyTemplate = (tpl: MatchTemplate) => {
+    const sport = sports.find((s) => s.id === tpl.sportId);
+    setFormData((f) => ({
+      ...f,
+      sportId: tpl.sportId,
+      complexId: tpl.complexId ?? '',
+      complexName: tpl.complexName ?? '',
+      courtId: tpl.courtId ?? '',
+      maxPlayers: tpl.maxPlayers,
+      minPlayers: tpl.minPlayers,
+      requirementValue: tpl.requiredLevel ? `level:${tpl.requiredLevel}` : tpl.requiredCategory ? `cat:${tpl.requiredCategory}` : '',
+      gender: tpl.gender ?? '',
+      description: tpl.description ?? '',
+    }));
+    if (tpl.complexId) setComplexMode('registered');
+    else if (tpl.complexName) setComplexMode('custom');
+    if (sport) setFormData((f) => ({ ...f, sportId: tpl.sportId, maxPlayers: tpl.maxPlayers, minPlayers: tpl.minPlayers }));
+    setTemplateOpen(false);
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim() || !formData.sportId) return;
+    setSavingTemplate(true);
+    try {
+      const { requirementValue, complexId, complexName, date, time, ...rest } = formData;
+      const requiredLevel  = requirementValue.startsWith('level:') ? requirementValue.slice(6) : undefined;
+      const requiredCategory = requirementValue.startsWith('cat:') ? requirementValue.slice(4) : undefined;
+      const newTpl = await post<MatchTemplate>('/api/v1/matches/templates', {
+        name: templateName.trim(),
+        sportId: formData.sportId,
+        ...(complexMode === 'registered' && complexId ? { complexId } : {}),
+        ...(complexMode === 'custom' && complexName ? { complexName } : {}),
+        maxPlayers: rest.maxPlayers,
+        minPlayers: rest.minPlayers,
+        ...(requiredLevel ? { requiredLevel } : {}),
+        ...(requiredCategory ? { requiredCategory } : {}),
+        ...(rest.gender ? { gender: rest.gender } : {}),
+        ...(rest.description ? { description: rest.description } : {}),
+      }, { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL });
+      setTemplates((prev) => [...prev, newTpl]);
+      setTemplateName('');
+    } catch { /* ignore */ }
+    finally { setSavingTemplate(false); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,6 +212,42 @@ export default function CreateMatchPage() {
             <h1 className="text-xl font-black text-white">{t('title')}</h1>
             <p className="text-sm text-slate-400 mt-1">Los campos marcados son obligatorios.</p>
           </div>
+
+          {/* Templates */}
+          {templates.length > 0 && (
+            <div className="px-7 pb-5 border-b border-slate-700/60">
+              <button
+                type="button"
+                onClick={() => setTemplateOpen((v) => !v)}
+                className="flex items-center gap-2 text-sm font-semibold text-teal-400 hover:text-teal-300 transition-colors"
+              >
+                <LayoutTemplate className="w-4 h-4" />
+                Cargar plantilla
+                {templateOpen ? <ChevronUp className="w-3.5 h-3.5 ml-auto" /> : <ChevronDown className="w-3.5 h-3.5 ml-auto" />}
+              </button>
+              {templateOpen && (
+                <div className="mt-3 space-y-1.5 max-h-48 overflow-y-auto">
+                  {templates.map((tpl) => {
+                    const sportName = sports.find((s) => s.id === tpl.sportId)?.name ?? tpl.sportId;
+                    return (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => applyTemplate(tpl)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left bg-slate-700/50 hover:bg-slate-700 rounded-xl transition-colors"
+                      >
+                        <LayoutTemplate className="w-4 h-4 text-teal-400 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white truncate">{tpl.name}</p>
+                          <p className="text-xs text-slate-500 truncate">{sportName} · {tpl.maxPlayers} jugadores</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="px-7 pb-7 space-y-5">
 
@@ -388,6 +476,33 @@ export default function CreateMatchPage() {
                       className={INPUT_CLS}
                     />
                   </div>
+
+                  {/* Save as template */}
+                  {formData.sportId && (
+                    <div className="pt-1 border-t border-slate-700/60">
+                      <label className={LABEL_CLS + ' flex items-center gap-1.5'}>
+                        <LayoutTemplate className="w-3.5 h-3.5" />
+                        Guardar como plantilla
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={templateName}
+                          onChange={(e) => setTemplateName(e.target.value)}
+                          placeholder='Nombre de la plantilla (ej. "Pádel martes")'
+                          className={INPUT_CLS}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveTemplate}
+                          disabled={!templateName.trim() || savingTemplate}
+                          className="px-3 py-2.5 bg-slate-600 hover:bg-slate-500 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 shrink-0"
+                        >
+                          {savingTemplate ? '...' : 'Guardar'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                 </div>
               )}

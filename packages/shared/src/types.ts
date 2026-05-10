@@ -76,6 +76,23 @@ export enum ParticipantStatus {
   INVITED = 'INVITED',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+  WAITLISTED = 'WAITLISTED',
+}
+
+export interface MatchTemplate {
+  id: string;
+  name: string;
+  sportId: string;
+  complexId: string | null;
+  complexName: string | null;
+  courtId: string | null;
+  maxPlayers: number;
+  minPlayers: number;
+  requiredLevel: string | null;
+  requiredCategory: string | null;
+  gender: string | null;
+  description: string | null;
+  createdAt: string;
 }
 
 export enum Team {

@@ -6,6 +6,11 @@
 - #1 [ ] Deployar matches-service en Railway para que tome el campo `complexName` (railway.toml ya tiene `prisma db push` en startCommand)
 - #2 [ ] Endpoint `GET /api/v1/matches/mine` requiere deploy del matches-service actualizado
 - #3 [ ] Verificar que OAuth de Google funciona en produccion con las URIs correctas en Google Cloud Console
+- #46 [x] Lista de espera: cuando un partido esta FULL, el usuario se anota en WAITLISTED — si alguien abandona se lo promueve automaticamente con notificacion
+- #47 [x] Minimo de jugadores: si al momento del partido no se alcanzo min_players, se cancela automaticamente y se notifica
+- #48 [x] Partidos recurrentes: el admin puede crear un partido que se repita (semanal/quincenal), genera instancias automaticamente
+- #49 [x] Revancha (rematch): endpoint que duplica la config de un partido COMPLETED/CANCELLED y crea uno nuevo con los mismos participantes invitados
+- #50 [x] Plantillas de partido: el usuario puede guardar la configuracion como plantilla y reutilizarla al crear partidos
 
 ### Frontend
 - #4 [x] Pagina de perfil: mejorar diseño general (dark theme, campos pais/ciudad/telefono/nacimiento, combobox de pais, date picker por selects)

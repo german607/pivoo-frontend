@@ -8,13 +8,12 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui';
 import { useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
-import { Users, Trophy, TrendingUp, UserMinus, Crown, Send, Trash2 } from 'lucide-react';
+import { Users, Trophy, TrendingUp, UserMinus, Crown, Send, Trash2, Search, UserPlus, X } from 'lucide-react';
 import { Link } from '@/navigation';
 
 interface TeamMember {
   id: string;
   userId: string;
-  role: 'ADMIN' | 'MEMBER';
   joinedAt: string;
 }
 
@@ -29,7 +28,6 @@ interface TeamDetail {
   name: string;
   color: string;
   sportId: string | null;
-  adminUserId: string;
   members: TeamMember[];
   invitations: { id: string; invitedUserId: string }[];
 }
@@ -59,7 +57,10 @@ export default function TeamDetailPage() {
   const [usersMap, setUsersMap] = useState<Record<string, UserProfile>>({});
   const [sportsMap, setSportsMap] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [inviteUserId, setInviteUserId] = useState('');
+  const [inviteUsername, setInviteUsername] = useState('');
+  const [foundUser, setFoundUser] = useState<UserProfile | null>(null);
+  const [searchError, setSearchError] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -107,12 +108,34 @@ export default function TeamDetailPage() {
     }
   };
 
+  const searchUser = async () => {
+    const q = inviteUsername.trim().replace(/^@/, '');
+    if (!q) return;
+    setIsSearching(true);
+    setFoundUser(null);
+    setSearchError('');
+    try {
+      const u = await get<UserProfile>(`/api/v1/users/username/${q}`, { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL });
+      if (u.id === user?.id) { setSearchError('No podés invitarte a vos mismo.'); return; }
+      const alreadyMember = team?.members.some((m) => m.userId === u.id);
+      if (alreadyMember) { setSearchError('Ese usuario ya es miembro del equipo.'); return; }
+      const alreadyInvited = team?.invitations.some((inv) => inv.invitedUserId === u.id);
+      if (alreadyInvited) { setSearchError('Ya tiene una invitación pendiente.'); return; }
+      setFoundUser(u);
+    } catch {
+      setSearchError('Usuario no encontrado.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const sendInvite = async () => {
-    if (!inviteUserId.trim()) return;
+    if (!foundUser) return;
     setIsSendingInvite(true);
     try {
-      await post(`/api/v1/teams/${teamId}/invitations`, { userId: inviteUserId.trim() }, { baseUrl: process.env.NEXT_PUBLIC_TEAMS_API_URL });
-      setInviteUserId('');
+      await post(`/api/v1/teams/${teamId}/invitations`, { userId: foundUser.id }, { baseUrl: process.env.NEXT_PUBLIC_TEAMS_API_URL });
+      setInviteUsername('');
+      setFoundUser(null);
       await loadData();
     } catch {}
     setIsSendingInvite(false);
@@ -144,7 +167,8 @@ export default function TeamDetailPage() {
     } catch {}
   };
 
-  const isAdmin = team?.adminUserId === user?.id;
+  const isMember = team?.members.some((m) => m.userId === user?.id) ?? false;
+  const isAdmin = isMember;
 
   if (authLoading || isLoading) {
     return (
@@ -254,7 +278,7 @@ export default function TeamDetailPage() {
                           <p className="text-sm font-medium text-white">
                             <span className="text-teal-400">{t('you')}</span>
                           </p>
-                          {member.role === 'ADMIN' && (
+                          {member.userId === team.members[0]?.userId && (
                             <span className="inline-flex items-center gap-1 text-xs text-amber-400 font-medium">
                               <Crown className="w-3 h-3" />
                               {t('admin')}
@@ -273,7 +297,7 @@ export default function TeamDetailPage() {
                           <p className="text-sm font-medium text-white">
                             {usersMap[member.userId]?.name || usersMap[member.userId]?.email || member.userId}
                           </p>
-                          {member.role === 'ADMIN' && (
+                          {member.userId === team.members[0]?.userId && (
                             <span className="inline-flex items-center gap-1 text-xs text-amber-400 font-medium">
                               <Crown className="w-3 h-3" />
                               {t('admin')}
@@ -298,34 +322,83 @@ export default function TeamDetailPage() {
 
               {/* Invite section — admin only */}
               {isAdmin && (
-                <div className="mt-5 pt-5 border-t border-slate-700">
-                  <p className="text-sm font-semibold text-slate-300 mb-2">{t('inviteMember')}</p>
+                <div className="mt-5 pt-5 border-t border-slate-700 space-y-3">
+                  <p className="text-sm font-semibold text-slate-300">{t('inviteMember')}</p>
+
+                  {/* Search input */}
                   <div className="flex gap-2">
-                    <input
-                      placeholder={t('inviteUserId')}
-                      value={inviteUserId}
-                      onChange={(e) => setInviteUserId(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && sendInvite()}
-                      className="flex-1 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                    <Button
-                      variant="primary"
-                      icon={<Send className="w-4 h-4" />}
-                      onClick={sendInvite}
-                      isLoading={isSendingInvite}
-                      disabled={!inviteUserId.trim()}
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium select-none">@</span>
+                      <input
+                        placeholder="username"
+                        value={inviteUsername}
+                        onChange={(e) => { setInviteUsername(e.target.value); setFoundUser(null); setSearchError(''); }}
+                        onKeyDown={(e) => e.key === 'Enter' && searchUser()}
+                        className="w-full pl-7 pr-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-500 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </div>
+                    <button
+                      onClick={searchUser}
+                      disabled={!inviteUsername.trim() || isSearching}
+                      className="px-4 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-1.5"
                     >
-                      {t('sendInvite')}
-                    </Button>
+                      {isSearching
+                        ? <span className="w-4 h-4 border-2 border-slate-400/30 border-t-slate-300 rounded-full animate-spin" />
+                        : <Search className="w-4 h-4" />}
+                      Buscar
+                    </button>
                   </div>
+
+                  {/* Search error */}
+                  {searchError && (
+                    <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                      {searchError}
+                    </p>
+                  )}
+
+                  {/* Found user card */}
+                  {foundUser && (
+                    <div className="flex items-center justify-between p-3 bg-teal-500/10 border border-teal-500/30 rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                          {(foundUser.name || foundUser.email).slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">{foundUser.name || foundUser.email}</p>
+                          <p className="text-xs text-teal-400">@{inviteUsername.trim().replace(/^@/, '')}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          icon={<UserPlus className="w-3.5 h-3.5" />}
+                          onClick={sendInvite}
+                          isLoading={isSendingInvite}
+                        >
+                          Invitar
+                        </Button>
+                        <button
+                          onClick={() => { setFoundUser(null); setInviteUsername(''); }}
+                          className="p-1.5 text-slate-500 hover:text-slate-300 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pending invitations */}
                   {team.invitations.length > 0 && (
-                    <div className="mt-3">
+                    <div>
                       <p className="text-xs text-slate-500 mb-2">{t('pendingInvitations')}</p>
                       <div className="space-y-1">
                         {team.invitations.map((inv) => (
-                          <p key={inv.id} className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1">
+                          <div key={inv.id} className="flex items-center gap-2 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                             {usersMap[inv.invitedUserId]?.name || usersMap[inv.invitedUserId]?.email || inv.invitedUserId}
-                          </p>
+                            <span className="ml-auto text-amber-500/60">Pendiente</span>
+                          </div>
                         ))}
                       </div>
                     </div>

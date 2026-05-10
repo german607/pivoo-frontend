@@ -12,7 +12,7 @@ import { Link, useRouter } from '@/navigation';
 import { useTranslations } from 'next-intl';
 import {
   Calendar, Users, Trophy, MapPin, CheckCircle, XCircle,
-  Clock, UserPlus, UserMinus, Trash2, Shield,
+  Clock, UserPlus, UserMinus, Trash2, Shield, RotateCcw, ListOrdered,
 } from 'lucide-react';
 import { SportIcon } from '@/components/SportIcon';
 
@@ -52,6 +52,8 @@ export default function MatchDetailPage() {
   const [resultWinner, setResultWinner] = useState<Team | ''>('');
   const [resultSets, setResultSets] = useState([{ setNumber: 1, teamAScore: '', teamBScore: '' }]);
   const [challengePartnerId, setChallengePartnerId] = useState('');
+  const [rematchDate, setRematchDate] = useState('');
+  const [rematchTime, setRematchTime] = useState('');
 
   const allUserIds = (match?.participants ?? []).map((p) => p.userId).filter((id): id is string => !!id);
   const { getName, getInitials } = useUserProfiles(allUserIds);
@@ -124,6 +126,17 @@ export default function MatchDetailPage() {
   };
   const handleApproveChallenge = () => act('approveChallenge', () => post(`/api/v1/matches/${matchId}/approve-challenge`, {}, MAPI));
   const handleRejectChallenge  = () => act('rejectChallenge',  () => post(`/api/v1/matches/${matchId}/reject-challenge`,  {}, MAPI));
+  const handleRematch = async () => {
+    if (!rematchDate || !rematchTime) return;
+    const [y, mo, d] = rematchDate.split('-').map(Number);
+    const [h, mi] = rematchTime.split(':').map(Number);
+    const scheduledAt = new Date(y, mo - 1, d, h, mi, 0).toISOString();
+    setActionLoading('rematch');
+    try {
+      const newMatch = await post<{ id: string }>(`/api/v1/matches/${matchId}/rematch`, { scheduledAt }, MAPI);
+      router.push(`/matches/${newMatch.id}`);
+    } finally { setActionLoading(''); }
+  };
 
   const handleAddGuest = async () => {
     if (!guestFirst.trim() || !guestLast.trim()) return;
@@ -159,6 +172,7 @@ export default function MatchDetailPage() {
   const approved        = match.participants.filter((p) => p.status === ParticipantStatus.APPROVED);
   const pending         = match.participants.filter((p) => p.status === ParticipantStatus.PENDING);
   const invitedPending  = match.participants.filter((p) => p.status === ParticipantStatus.INVITED);
+  const waitlisted      = match.participants.filter((p) => p.status === ParticipantStatus.WAITLISTED);
   const isTeamVsTeam    = match.mode === MatchMode.TEAM_VS_TEAM;
   const pendingTeamB    = pending.filter((p) => p.team === Team.TEAM_B);
   const approvedTeamB   = approved.filter((p) => p.team === Team.TEAM_B);
@@ -286,6 +300,12 @@ export default function MatchDetailPage() {
                 {t('requestJoin')}
               </Button>
             )}
+            {!myParticipant && match.status === 'FULL' && !isTeamVsTeam && (
+              <Button variant="outline" size="lg" className="w-full !border-slate-500 !text-slate-300" onClick={handleJoin} isLoading={actionLoading === 'join'}>
+                <ListOrdered className="w-4 h-4 mr-2" />
+                Unirse a lista de espera
+              </Button>
+            )}
 
             {/* ── Team vs Team: challenge form ── */}
             {!myParticipant && match.status === 'OPEN' && isTeamVsTeam && !hasApprovedTeamB && (
@@ -346,6 +366,15 @@ export default function MatchDetailPage() {
                   isLoading={actionLoading === 'leave'}>
                   {t('leaveMatch')}
                 </Button>
+              </div>
+            )}
+            {myStatus === ParticipantStatus.WAITLISTED && (
+              <div className="flex items-center gap-3 p-4 bg-slate-600/30 border border-slate-500/40 rounded-xl">
+                <ListOrdered className="w-5 h-5 text-slate-400 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-slate-300">Estás en lista de espera</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Te notificaremos si se libera un lugar.</p>
+                </div>
               </div>
             )}
             {myStatus === ParticipantStatus.REJECTED && (
@@ -578,6 +607,34 @@ export default function MatchDetailPage() {
               )}
             </div>
 
+            {/* Waitlist */}
+            {waitlisted.length > 0 && (
+              <div className={CARD}>
+                <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <ListOrdered className="w-3.5 h-3.5" />
+                  Lista de espera
+                  <span className="bg-slate-600/40 text-slate-400 border border-slate-500/30 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                    {waitlisted.length}
+                  </span>
+                </h2>
+                <div className="space-y-2">
+                  {waitlisted.map((p, i) => (
+                    <div key={p.id} className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-xl">
+                      <span className="w-6 h-6 rounded-full bg-slate-600/50 flex items-center justify-center text-[10px] font-black text-slate-400 shrink-0">
+                        {i + 1}
+                      </span>
+                      <div className="w-9 h-9 rounded-full bg-slate-600 flex items-center justify-center text-slate-300 text-xs font-bold shrink-0">
+                        {getInitials(p.userId)}
+                      </div>
+                      <p className="text-sm font-medium text-slate-300 flex-1 truncate">{getName(p.userId)}</p>
+                      <span className="text-xs text-slate-500 font-medium">En espera</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-600 mt-3">Si alguien abandona, el primero de la lista recibe una invitación automática.</p>
+              </div>
+            )}
+
             {/* Sent invitations */}
             {invitedPending.length > 0 && (
               <div className={CARD}>
@@ -699,6 +756,50 @@ export default function MatchDetailPage() {
                 <Button variant="danger" size="sm" icon={<Trash2 className="w-4 h-4" />}
                   onClick={handleCancel} isLoading={actionLoading === 'cancel'}>
                   {t('cancelMatch')}
+                </Button>
+              </div>
+            )}
+
+            {/* Rematch */}
+            {(match.status === 'COMPLETED' || match.status === 'CANCELLED') && (
+              <div className={CARD}>
+                <div className="flex items-center gap-2 mb-1">
+                  <RotateCcw className="w-4 h-4 text-teal-400" />
+                  <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Revancha</h2>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">Crea un nuevo partido con la misma configuración. Los participantes recibirán una invitación.</p>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Fecha</label>
+                    <input
+                      type="date"
+                      value={rematchDate}
+                      onChange={(e) => setRematchDate(e.target.value)}
+                      className={`w-full ${INPUT} [color-scheme:dark]`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Hora</label>
+                    <select value={rematchTime} onChange={(e) => setRematchTime(e.target.value)} className={`w-full ${SELECT}`}>
+                      <option value="">Elegí hora</option>
+                      {Array.from({ length: 36 }, (_, i) => {
+                        const total = 6 * 60 + i * 30;
+                        const h = String(Math.floor(total / 60)).padStart(2, '0');
+                        const m = String(total % 60).padStart(2, '0');
+                        return `${h}:${m}`;
+                      }).map((slot) => <option key={slot} value={slot}>{slot}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={handleRematch}
+                  isLoading={actionLoading === 'rematch'}
+                  disabled={!rematchDate || !rematchTime}
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Crear revancha
                 </Button>
               </div>
             )}
