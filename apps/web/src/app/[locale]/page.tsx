@@ -7,9 +7,10 @@ import { useEffect, useState } from 'react';
 import { Zap, TrendingUp, Users, ArrowRight, Trophy, Star, Camera, Send, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { useTranslations } from 'next-intl';
-import { Match, Sport } from '@pivoo/shared';
+import { Match, Sport, UserSportStats, UserGender, MatchGender } from '@pivoo/shared';
 import { useApi } from '@/hooks/useApi';
 import { MatchCard } from '@/components/MatchCard';
+import { sortByRelevance } from '@/utils/matchScore';
 
 // ─── Feed (logged-in) ────────────────────────────────────────────────
 
@@ -24,11 +25,23 @@ function FeedPage() {
 
   useEffect(() => {
     Promise.all([
-      get<Match[]>('/api/v1/matches?status=OPEN&limit=3', { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL }).catch(() => [] as Match[]),
+      get<Match[]>('/api/v1/matches?status=OPEN', { baseUrl: process.env.NEXT_PUBLIC_MATCHES_API_URL }).catch(() => [] as Match[]),
       get<Sport[]>('/api/v1/sports', { baseUrl: process.env.NEXT_PUBLIC_SPORTS_API_URL }).catch(() => [] as Sport[]),
-    ]).then(([matchList, sportList]) => {
-      setMatches((matchList ?? []).slice(0, 3));
+      user
+        ? get<{ sportStats: UserSportStats[]; gender: string | null }>('/api/v1/users/me', { baseUrl: process.env.NEXT_PUBLIC_USERS_API_URL }).catch(() => null)
+        : Promise.resolve(null),
+    ]).then(([matchList, sportList, profileData]) => {
       setSports(sportList ?? []);
+      const userGender = (profileData?.gender as UserGender) ?? null;
+      const userStats = profileData?.sportStats ?? [];
+      const genderFiltered = (matchList ?? []).filter((m) => {
+        if (userGender && m.gender && m.gender !== MatchGender.MIXTO) {
+          return (m.gender as string) === (userGender as string);
+        }
+        return true;
+      });
+      const sorted = sortByRelevance(genderFiltered, userStats, userGender);
+      setMatches(sorted.slice(0, 3));
     });
   }, []);
 
